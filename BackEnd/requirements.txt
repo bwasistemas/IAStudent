@@ -1,0 +1,7 @@
+agno[playground]
+openai
+python-dotenv
+packaging
+fastapi
+uvicorn
+sqlalchemy

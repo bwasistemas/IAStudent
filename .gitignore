@@ -1,0 +1,10 @@
+# secrets
+.env
+*.env
+Backend/.env2.env
+.env*
+Backend/.env2
+.env
+.env*
+*.env.*
+
