@@ -17,9 +17,18 @@ import {
   Shield,
   LogOut,
   Settings,
-  AlertCircle
+  AlertCircle,
+  Database,
+  Link,
+  Key,
+  Check,
+  AlertTriangle,
+  Globe,
+  Code,
+  TestTube
 } from 'lucide-react'
 import Image from 'next/image'
+import { ToolsManagement } from './ToolsManagement'
 
 interface Agent {
   id: string
@@ -48,7 +57,44 @@ interface Agent {
   updatedAt: string
 }
 
-
+interface APITool {
+  id: string
+  name: string
+  description: string
+  type: 'database' | 'api' | 'webhook'
+  endpoint: string
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE'
+  authentication: {
+    type: 'none' | 'bearer' | 'api_key' | 'basic'
+    token?: string
+    apiKey?: string
+    username?: string
+    password?: string
+    headerName?: string
+  }
+  headers: { [key: string]: string }
+  parameters: {
+    name: string
+    type: 'string' | 'number' | 'boolean'
+    required: boolean
+    description: string
+    defaultValue?: string
+  }[]
+  responseMapping: {
+    dataPath: string
+    fields: {
+      source: string
+      target: string
+      type: 'string' | 'number' | 'boolean' | 'array'
+    }[]
+  }
+  isActive: boolean
+  lastTested?: string
+  testStatus?: 'success' | 'error' | 'pending'
+  testMessage?: string
+  createdAt: string
+  updatedAt: string
+}
 
 const ICON_OPTIONS = [
   { value: 'brain', label: 'Cérebro', icon: <Brain className="w-4 h-4" /> },
@@ -72,8 +118,99 @@ export function ConfiguracoesPage() {
   const { agents, addAgent, updateAgent, deleteAgent, resetToDefaultAgents, loading, error } = useAgents()
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null)
   const [isCreating, setIsCreating] = useState(false)
-  const [activeTab, setActiveTab] = useState<'agents' | 'users' | 'system'>('agents')
+  const [activeTab, setActiveTab] = useState<'agents' | 'tools' | 'users' | 'system'>('agents')
   const [saving, setSaving] = useState(false)
+  
+  // Estados para gerenciamento de tools
+  const [tools, setTools] = useState<APITool[]>([
+    {
+      id: '1',
+      name: 'API de Dispensas Acadêmicas',
+      description: 'Consulta histórico de dispensas e equivalências já aprovadas',
+      type: 'api',
+      endpoint: 'https://api.afya.com/v1/dispensas',
+      method: 'GET',
+      authentication: {
+        type: 'bearer',
+        token: ''
+      },
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      parameters: [
+        {
+          name: 'curso_origem',
+          type: 'string',
+          required: false,
+          description: 'Filtrar por curso de origem'
+        },
+        {
+          name: 'disciplina',
+          type: 'string',
+          required: false,
+          description: 'Nome da disciplina para buscar equivalências'
+        }
+      ],
+      responseMapping: {
+        dataPath: 'data.dispensas',
+        fields: [
+          { source: 'disciplina_origem', target: 'disciplina_origem', type: 'string' },
+          { source: 'disciplina_destino', target: 'disciplina_destino', type: 'string' },
+          { source: 'percentual_equivalencia', target: 'equivalencia', type: 'number' },
+          { source: 'observacoes', target: 'observacoes', type: 'string' }
+        ]
+      },
+      isActive: false,
+      createdAt: '2024-01-15T10:00:00Z',
+      updatedAt: '2024-01-15T10:00:00Z'
+    },
+    {
+      id: '2',
+      name: 'Base de Matriz Curricular',
+      description: 'Consulta matrizes curriculares atualizadas dos cursos AFYA',
+      type: 'database',
+      endpoint: 'https://db.afya.com/api/matriz-curricular',
+      method: 'POST',
+      authentication: {
+        type: 'api_key',
+        apiKey: '',
+        headerName: 'X-API-Key'
+      },
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      parameters: [
+        {
+          name: 'curso_id',
+          type: 'string',
+          required: true,
+          description: 'ID do curso para consultar matriz'
+        },
+        {
+          name: 'ano_letivo',
+          type: 'string',
+          required: false,
+          description: 'Ano letivo da matriz (padrão: atual)'
+        }
+      ],
+      responseMapping: {
+        dataPath: 'matriz.disciplinas',
+        fields: [
+          { source: 'codigo', target: 'codigo_disciplina', type: 'string' },
+          { source: 'nome', target: 'nome_disciplina', type: 'string' },
+          { source: 'carga_horaria', target: 'carga_horaria', type: 'number' },
+          { source: 'creditos', target: 'creditos', type: 'number' },
+          { source: 'periodo', target: 'periodo', type: 'number' }
+        ]
+      },
+      isActive: false,
+      createdAt: '2024-01-15T10:00:00Z',
+      updatedAt: '2024-01-15T10:00:00Z'
+    }
+  ])
+  const [editingTool, setEditingTool] = useState<APITool | null>(null)
+  const [isCreatingTool, setIsCreatingTool] = useState(false)
+  const [testingTool, setTestingTool] = useState<string | null>(null)
 
   // Verificar se o usuário é administrador
   const isAdmin = user?.role === 'admin'

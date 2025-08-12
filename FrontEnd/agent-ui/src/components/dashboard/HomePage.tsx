@@ -1276,15 +1276,20 @@ export default function HomePage() {
             {/* Menu de navegação */}
             <nav className="hidden md:flex items-center space-x-8">
               <a href="#" className="text-[#232323] hover:text-[#CE0058] transition-colors font-medium">Dashboard</a>
-              <a href="#" className="text-[#8E9794] hover:text-[#CE0058] transition-colors">Análise de Documentos</a>
+              <button 
+                onClick={() => router.push('/analise-documentos')}
+                className="text-[#8E9794] hover:text-[#CE0058] transition-colors"
+              >
+                Análise de Documentos
+              </button>
               <a href="#" className="text-[#8E9794] hover:text-[#CE0058] transition-colors">Relatórios</a>
               {user?.role === 'admin' && (
-                <a 
-                  href="/configuracoes" 
+                <button 
+                  onClick={() => router.push('/configuracoes-completa')}
                   className="text-[#8E9794] hover:text-[#CE0058] transition-colors"
                 >
                   Configurações
-                </a>
+                </button>
               )}
             </nav>
 
@@ -1356,10 +1361,19 @@ export default function HomePage() {
             Plataforma inteligente para análise de documentos de transferência externa e portador de diploma. 
             Utilize IA para agilizar o processo de avaliação acadêmica.
           </p>
-          <button className="bg-[#CE0058] text-white px-8 py-3 rounded-lg hover:bg-[#B91C5C] transition-colors font-medium text-lg flex items-center gap-2 mx-auto">
-            <Plus className="w-5 h-5" />
-            Iniciar Nova Análise
-          </button>
+          <div className="flex items-center justify-center gap-4">
+            <button className="bg-[#CE0058] text-white px-8 py-3 rounded-lg hover:bg-[#B91C5C] transition-colors font-medium text-lg flex items-center gap-2">
+              <Plus className="w-5 h-5" />
+              Iniciar Nova Análise
+            </button>
+            <button 
+              onClick={() => router.push('/analise-documentos')}
+              className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg flex items-center gap-2"
+            >
+              <BarChart3 className="w-5 h-5" />
+              Central de Análise
+            </button>
+          </div>
         </div>
 
         {/* Estatísticas */}
@@ -1431,8 +1445,13 @@ export default function HomePage() {
                     {/* Header do agente */}
                     <div className="mb-5">
                       <div className="flex items-center justify-center mb-4">
-                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg`}
-                             style={{ backgroundColor: agent.color || '#6B7280' }}>
+                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg ${
+                          agent.color?.includes('from-') || agent.color?.includes('to-') 
+                            ? `bg-gradient-to-r ${agent.color}` 
+                            : agent.color 
+                              ? `bg-[${agent.color}]` 
+                              : 'bg-gray-500'
+                        }`}>
                           {(() => {
                             // Mapeamento de ícones emoji para componentes React
                             const iconMap: Record<string, React.ReactNode> = {
@@ -1789,13 +1808,22 @@ export default function HomePage() {
                       <span className="text-sm text-[#8E9794]">{analysis.coordinator}</span>
                     </td>
                     <td className="px-4 py-4">
-                      <button 
-                        onClick={() => router.push(`/playground?analysis=${analysis.id}`)}
-                        className="bg-[#CE0058] hover:bg-[#B91C5C] text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
-                      >
-                        <Eye className="w-3 h-3" />
-                        Ver Análise
-                      </button>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => router.push(`/playground?analysis=${analysis.id}`)}
+                          className="bg-[#CE0058] hover:bg-[#B91C5C] text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+                        >
+                          <Eye className="w-3 h-3" />
+                          Ver Análise
+                        </button>
+                        <button 
+                          onClick={() => router.push(`/analise?id=${analysis.id}`)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+                        >
+                          <GraduationCap className="w-3 h-3" />
+                          Aproveitamento
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
