@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAgents } from '@/contexts/AgentsContext'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -92,13 +92,14 @@ export function PlaygroundPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Scroll automático para o final das mensagens
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  }, [])
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    const timeoutId = setTimeout(scrollToBottom, 100)
+    return () => clearTimeout(timeoutId)
+  }, [messages, scrollToBottom])
 
   // Função para renderizar ícone baseado no nome do ícone
   const renderIcon = (iconName: string, size = 'w-6 h-6') => {
@@ -175,6 +176,17 @@ export function PlaygroundPage() {
       }
     }
   }, [searchParams, agents, selectedAgent])
+
+  // Cleanup de URLs de objeto para evitar memory leaks
+  useEffect(() => {
+    return () => {
+      uploadedDocuments.forEach(doc => {
+        if (doc.url.startsWith('blob:')) {
+          URL.revokeObjectURL(doc.url)
+        }
+      })
+    }
+  }, [uploadedDocuments])
 
 
   const handleLogout = () => {
@@ -409,7 +421,13 @@ export function PlaygroundPage() {
                 <div className="text-center">
                   <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl`}
                        style={{ backgroundColor: agent.color }}>
-                    {renderIcon(agent.icon)}
+                    <Image
+                      src="/Afya.png"
+                      alt="Logo AFYA"
+                      width={32}
+                      height={32}
+                      className="object-contain"
+                    />
                   </div>
                   <h3 className="text-lg font-semibold text-[#232323] mb-2">{agent.name}</h3>
                   <p className="text-sm text-[#8E9794] mb-4">{agent.description}</p>
@@ -483,9 +501,9 @@ export function PlaygroundPage() {
 
       {/* Chat Interface */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
           {/* Documentos */}
-          <div className="lg:col-span-1">
+          <div className="md:col-span-1">
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
               <h3 className="text-lg font-semibold text-[#232323] mb-4">Documentos</h3>
               
@@ -542,39 +560,65 @@ export function PlaygroundPage() {
           </div>
 
           {/* Chat */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm h-[600px] flex flex-col">
+          <div className="md:col-span-2 lg:col-span-3">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm min-h-[60vh] max-h-[80vh] flex flex-col">
               {/* Chat Header */}
-              <div className="bg-gradient-to-r from-[#CE0058] via-[#B91C5C] to-[#A21857] text-white p-6 rounded-t-xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-black/10"></div>
+              <div className="bg-gradient-to-r from-[#CE0058] to-[#B91C5C] text-white p-6 rounded-t-xl relative overflow-hidden">
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
-                      {renderIcon(selectedAgent.icon, 'w-7 h-7')}
+                    <div className="w-14 h-14 bg-white/25 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg border border-white/20">
+                      <Image
+                        src="/Afya.png"
+                        alt="Logo AFYA"
+                        width={28}
+                        height={28}
+                        className="object-contain"
+                      />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold flex items-center gap-2">
+                      <h2 className="text-2xl font-bold flex items-center gap-2 text-white drop-shadow-sm">
                         {selectedAgent.name}
-                        <Sparkles className="w-5 h-5 text-yellow-300" />
+                        <Sparkles className="w-5 h-5 text-yellow-200" />
                       </h2>
-                      <p className="text-white/80 text-sm">{selectedAgent.model} • {selectedAgent.description}</p>
+                      <p className="text-white/95 text-sm font-medium drop-shadow-sm">{selectedAgent.model} • {selectedAgent.description}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <div className={`w-2 h-2 rounded-full ${
-                          isConnected ? 'bg-green-400' : 'bg-red-400'
+                        <div className={`w-2 h-2 rounded-full shadow-sm ${
+                          isConnected ? 'bg-green-300' : 'bg-red-300'
                         }`} />
-                        <span className="text-xs text-white/70">
+                        <span className="text-xs text-white/90 font-medium">
                           {isConnected ? 'Online e pronto' : 'Desconectado'}
                         </span>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
-                      <span className="text-xs font-medium">{messages.length} mensagens</span>
+                    <div className="bg-white/25 backdrop-blur-sm rounded-lg px-3 py-1 border border-white/20">
+                      <span className="text-xs font-medium text-white/95">{messages.length} mensagens</span>
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Connection Status Warning */}
+              {!isConnected && (
+                <div className="bg-red-50 border-b border-red-200 p-4">
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="w-5 h-5 text-red-500" />
+                    <div>
+                      <h3 className="text-sm font-medium text-red-800">Conexão Perdida</h3>
+                      <p className="text-sm text-red-600 mt-1">
+                        Não foi possível conectar ao servidor. Tentando reconectar...
+                      </p>
+                    </div>
+                    <button
+                      onClick={checkBackendStatus}
+                      className="ml-auto px-3 py-1 bg-red-100 text-red-700 rounded-md text-sm hover:bg-red-200 transition-colors"
+                    >
+                      Tentar Novamente
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-gray-50/50 to-white">
@@ -701,8 +745,16 @@ export function PlaygroundPage() {
                             handleSendMessage()
                           }
                         }}
-                        placeholder="Digite sua mensagem... (Enter para enviar, Shift+Enter para nova linha)"
-                        className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#CE0058] focus:border-transparent resize-none min-h-[50px] max-h-32"
+                        placeholder={
+                          !isConnected 
+                            ? "Aguardando conexão com servidor..." 
+                            : isLoading 
+                            ? "Aguardando resposta..." 
+                            : "Digite sua mensagem... (Enter para enviar, Shift+Enter para nova linha)"
+                        }
+                        className={`w-full px-4 py-3 pr-12 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#CE0058] focus:border-transparent resize-none min-h-[50px] max-h-32 transition-all ${
+                          !isConnected ? 'bg-gray-50 border-gray-200' : 'border-gray-300'
+                        }`}
                         disabled={isLoading || !isConnected}
                         rows={1}
                         style={{ 

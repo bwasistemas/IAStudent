@@ -30,6 +30,9 @@ export default function RootLayout({
           href="https://fonts.cdnfonts.com/css/gotham"
           rel="stylesheet"
         />
+        <link rel="icon" type="image/png" href="/Afya.png" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/Afya.png" />
       </head>
       <body className={`${inter.className} font-gotham antialiased`}>
         <AuthProvider>
