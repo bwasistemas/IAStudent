@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAgents } from '@/contexts/AgentsContext'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -13,18 +13,25 @@ import {
   FileText, 
   X, 
   Download,
-  Users,
-  Shield
+  Shield,
+  Eye,
+  User,
+  Sparkles,
+  CheckCircle,
+  AlertTriangle,
+  Loader2
 } from 'lucide-react'
 import Image from 'next/image'
 
 interface Message {
   id: string
   content: string
-  sender: 'user' | 'agent'
+  sender: 'user' | 'agent' | 'system'
   timestamp: Date
   agentName?: string
   documents?: Document[]
+  type?: 'text' | 'typing' | 'tool_call' | 'error'
+  isStreaming?: boolean
 }
 
 interface Document {
@@ -78,23 +85,62 @@ export function PlaygroundPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [currentAnalysis, setCurrentAnalysis] = useState<Analysis | null>(null)
+  const [, setCurrentAnalysis] = useState<Analysis | null>(null)
   const [uploadedDocuments, setUploadedDocuments] = useState<Document[]>([])
+  const [isConnected, setIsConnected] = useState(false)
+  const [, setBackendStatus] = useState<'checking' | 'connected' | 'error'>('checking')
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Scroll automático para o final das mensagens
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
 
   // Função para renderizar ícone baseado no nome do ícone
-  const renderIcon = (iconName: string) => {
-    console.log('🔍 renderIcon called with:', iconName)
+  const renderIcon = (iconName: string, size = 'w-6 h-6') => {
+    const iconClass = `${size} text-white`
     switch (iconName) {
       case '👨‍🏫':
-        return <GraduationCap className="w-6 h-6" />
+        return <User className={iconClass} />
       case '🔍':
-        return <Shield className="w-6 h-6" />
-      case '📊':
-        return <Users className="w-6 h-6" />
+        return <Eye className={iconClass} />
+      case '🎓':
+        return <GraduationCap className={iconClass} />
       default:
-        return <Brain className="w-6 h-6" />
+        return <Brain className={iconClass} />
     }
   }
+
+  // Verificar status do backend
+  const checkBackendStatus = async () => {
+    try {
+      setBackendStatus('checking')
+      const response = await fetch('http://localhost:7777/', { 
+        method: 'GET',
+        signal: AbortSignal.timeout(5000) // 5 segundos timeout
+      })
+      if (response.ok) {
+        setBackendStatus('connected')
+        setIsConnected(true)
+      } else {
+        setBackendStatus('error')
+        setIsConnected(false)
+      }
+    } catch (error) {
+      console.error('Backend connection failed:', error)
+      setBackendStatus('error')
+      setIsConnected(false)
+    }
+  }
+
+  // Verificar backend na inicialização
+  useEffect(() => {
+    checkBackendStatus()
+  }, [])
 
   // Verificar se há uma análise específica na URL
   useEffect(() => {
@@ -122,72 +168,14 @@ export function PlaygroundPage() {
   // Verificar se há um agente selecionado na URL
   useEffect(() => {
     const agentId = searchParams.get('agent')
-    console.log('🔍 URL agent ID:', agentId)
-    console.log('🔍 Available agents:', agents)
-    
-    if (agentId && agents.length > 0) {
+    if (agentId && agents.length > 0 && !selectedAgent) {
       const agent = agents.find(a => a.id === agentId)
-      console.log('🔍 Found agent:', agent)
       if (agent) {
         handleAgentSelect(agent)
       }
     }
-  }, [searchParams, agents])
+  }, [searchParams, agents, selectedAgent])
 
-  // Debug: Log quando selectedAgent muda
-  useEffect(() => {
-    console.log('🔍 Selected agent changed:', selectedAgent)
-  }, [selectedAgent])
-
-  // Debug: Log quando messages mudam
-  useEffect(() => {
-    console.log('🔍 Messages changed:', messages)
-  }, [messages])
-
-  // Debug: Log quando inputMessage muda
-  useEffect(() => {
-    console.log('🔍 Input message changed:', inputMessage)
-  }, [inputMessage])
-
-  // Debug: Log quando isLoading muda
-  useEffect(() => {
-    console.log('🔍 Loading state changed:', isLoading)
-  }, [isLoading])
-
-  // Debug: Log quando uploadedDocuments muda
-  useEffect(() => {
-    console.log('🔍 Uploaded documents changed:', uploadedDocuments)
-  }, [uploadedDocuments])
-
-  // Debug: Log quando currentAnalysis muda
-  useEffect(() => {
-    console.log('🔍 Current analysis changed:', currentAnalysis)
-  }, [currentAnalysis])
-
-  // Debug: Log quando agents muda
-  useEffect(() => {
-    console.log('🔍 Agents changed:', agents)
-  }, [agents])
-
-  // Debug: Log quando searchParams muda
-  useEffect(() => {
-    console.log('🔍 Search params changed:', searchParams.toString())
-  }, [searchParams])
-
-  // Debug: Log quando user muda
-  useEffect(() => {
-    console.log('🔍 User changed:', user)
-  }, [user])
-
-  // Debug: Log quando router muda
-  useEffect(() => {
-    console.log('🔍 Router changed:', router)
-  }, [router])
-
-  // Debug: Log quando logout muda
-  useEffect(() => {
-    console.log('🔍 Logout function changed:', logout)
-  }, [logout])
 
   const handleLogout = () => {
     logout()
@@ -195,12 +183,19 @@ export function PlaygroundPage() {
   }
 
   const handleSendMessage = async () => {
-    console.log('🔍 handleSendMessage called')
-    console.log('🔍 inputMessage:', inputMessage)
-    console.log('🔍 selectedAgent:', selectedAgent)
-    
-    if (!inputMessage.trim() || !selectedAgent) {
-      console.log('🔍 Early return - no message or agent')
+    if (!inputMessage.trim() || !selectedAgent || isLoading) {
+      return
+    }
+
+    if (!isConnected) {
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        content: '⚠️ **Erro de Conexão**\n\nNão foi possível conectar ao backend. Verifique se o servidor Python está rodando em http://localhost:7777',
+        sender: 'system',
+        timestamp: new Date(),
+        type: 'error'
+      }
+      setMessages(prev => [...prev, errorMessage])
       return
     }
 
@@ -211,78 +206,89 @@ export function PlaygroundPage() {
       timestamp: new Date()
     }
 
-    console.log('🔍 Adding user message:', userMessage)
+    const currentInput = inputMessage
     setMessages(prev => [...prev, userMessage])
     setInputMessage('')
     setIsLoading(true)
 
-    // Simular resposta inteligente do agente baseada no contexto
-    setTimeout(() => {
-      console.log('🔍 Simulating agent response')
-      let response = ''
-      
-      if (currentAnalysis && uploadedDocuments.length > 0) {
-        // Resposta contextualizada com documentos
-        response = `Analisando os documentos de ${currentAnalysis.studentName}...
-        
-📋 **Documentos identificados:**
-${uploadedDocuments.map(doc => `• ${doc.name} (${doc.type})`).join('\n')}
+    // Adicionar mensagem de typing
+    const typingMessage: Message = {
+      id: `typing-${Date.now()}`,
+      content: '',
+      sender: 'agent',
+      timestamp: new Date(),
+      agentName: selectedAgent.name,
+      type: 'typing'
+    }
+    setMessages(prev => [...prev, typingMessage])
 
-🔍 **Análise em andamento:**
-${inputMessage.toLowerCase().includes('aproveitamento') ? 
-  'Calculando percentual de aproveitamento das disciplinas...' :
-  inputMessage.toLowerCase().includes('equivalência') ?
-  'Verificando equivalências entre matrizes curriculares...' :
-  'Processando informações dos documentos para análise acadêmica...'
-}
+    try {
+      // Fazer requisição real para o backend Agno
+      const response = await fetch('http://localhost:7777/playground/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: currentInput,
+          agent_id: selectedAgent.name,  // Usar nome do agente
+          session_id: `session-${selectedAgent.id}-${Date.now()}`,
+          stream: false
+        })
+      })
 
-💡 **Próximos passos:**
-1. Validação de autenticidade dos documentos
-2. Análise comparativa de ementas
-3. Cálculo de equivalências
-4. Recomendação de aproveitamento
+      // Remover mensagem de typing
+      setMessages(prev => prev.filter(m => m.id !== typingMessage.id))
 
-Como posso ajudá-lo com mais detalhes específicos?`
-      } else {
-        // Resposta geral do agente
-        response = `Olá! Sou o ${selectedAgent.name}. 
-
-${selectedAgent.instructions.split('\n').slice(0, 5).join('\n')}
-
-${inputMessage.toLowerCase().includes('documento') ? 
-  'Para analisar documentos, por favor faça o upload dos arquivos necessários.' :
-  'Como posso ajudá-lo com a análise de documentos acadêmicos?'
-}`
+      if (!response.ok) {
+        throw new Error(`Erro na resposta: ${response.status}`)
       }
 
-      console.log('🔍 Agent response:', response)
+      const data = await response.json()
+      
+      let responseContent = ''
+      if (data.content) {
+        responseContent = Array.isArray(data.content) ? 
+          data.content.map((c: { text?: string; content?: string }) => c.text || c.content || '').join('\n') :
+          data.content
+      } else if (data.message) {
+        responseContent = data.message
+      } else {
+        responseContent = 'Resposta recebida, mas formato inesperado.'
+      }
 
       const agentMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: response,
+        id: Date.now().toString(),
+        content: responseContent,
         sender: 'agent',
         timestamp: new Date(),
         agentName: selectedAgent.name,
-        documents: uploadedDocuments
+        type: 'text'
       }
       
-      console.log('🔍 Adding agent message:', agentMessage)
       setMessages(prev => [...prev, agentMessage])
+      
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error)
+      
+      // Remover mensagem de typing se ainda estiver lá
+      setMessages(prev => prev.filter(m => m.id !== typingMessage.id))
+      
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        content: `😔 **Erro na Comunicação**\n\nNão foi possível obter resposta do agente. Detalhes: ${error instanceof Error ? error.message : 'Erro desconhecido'}\n\n🔍 Verifique se o backend Python está rodando corretamente.`,
+        sender: 'system',
+        timestamp: new Date(),
+        type: 'error'
+      }
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
       setIsLoading(false)
-    }, 2000)
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    console.log('🔍 Key pressed:', e.key)
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      console.log('🔍 Enter pressed, calling handleSendMessage')
-      handleSendMessage()
     }
   }
 
+
   const handleDocumentUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('🔍 handleDocumentUpload called')
     const files = event.target.files
     if (files) {
       const newDocs: Document[] = Array.from(files).map((file, index) => ({
@@ -294,35 +300,27 @@ ${inputMessage.toLowerCase().includes('documento') ?
         uploadedAt: new Date().toISOString(),
         size: `${(file.size / 1024 / 1024).toFixed(1)}MB`
       }))
-      console.log('🔍 New documents:', newDocs)
       setUploadedDocuments(prev => [...prev, ...newDocs])
     }
   }
 
-  const handleAgentSelect = (agent: any) => {
-    console.log('🔍 handleAgentSelect called with:', agent)
-    
+  const handleAgentSelect = (agent: Agent) => {
     setSelectedAgent(agent)
-    // Resetar mensagens e análise quando um novo agente é selecionado
     setMessages([])
     setCurrentAnalysis(null)
     setUploadedDocuments([])
     
-    // Adicionar mensagem inicial do agente
-    const initialMessage: Message = {
-      id: 'agent-intro',
-      content: `Olá! Sou o ${agent.name}. 
-
-${agent.instructions.split('\n').slice(0, 5).join('\n')}
-
-Como posso ajudá-lo com a análise de documentos acadêmicos?`,
+    // Adicionar mensagem de boas-vindas mais amigável
+    const welcomeMessage: Message = {
+      id: 'agent-welcome',
+      content: `👋 **Olá! Sou o ${agent.name}**\n\n🎯 **Minha especialidade:** ${agent.description}\n\n🤖 **O que posso fazer:**\n• Analisar documentos acadêmicos\n• Consultar histórico de análises\n• Verificar compatibilidade curricular\n• Orientar sobre procedimentos\n\n💬 **Como posso ajudá-lo hoje?**\nFaça sua pergunta ou faça upload de documentos para análise.`,
       sender: 'agent',
       timestamp: new Date(),
-      agentName: agent.name
+      agentName: agent.name,
+      type: 'text'
     }
     
-    console.log('🔍 Setting initial message:', initialMessage)
-    setMessages([initialMessage])
+    setMessages([welcomeMessage])
   }
 
   if (!selectedAgent) {
@@ -510,7 +508,7 @@ Como posso ajudá-lo com a análise de documentos acadêmicos?`,
                 {uploadedDocuments.map((doc) => (
                   <div key={doc.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      doc.type === 'historico' ? 'bg-blue-100 text-blue-600' :
+                      doc.type === 'historico' ? 'bg-pink-100 text-[#CE0058]' :
                       doc.type === 'ementa' ? 'bg-green-100 text-green-600' :
                       'bg-gray-100 text-gray-600'
                     }`}>
@@ -547,119 +545,215 @@ Como posso ajudá-lo com a análise de documentos acadêmicos?`,
           <div className="lg:col-span-3">
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm h-[600px] flex flex-col">
               {/* Chat Header */}
-              <div className="bg-gradient-to-r from-[#CE0058] to-[#B91C5C] text-white p-6 rounded-t-xl">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                    {renderIcon(selectedAgent.icon)}
+              <div className="bg-gradient-to-r from-[#CE0058] via-[#B91C5C] to-[#A21857] text-white p-6 rounded-t-xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/10"></div>
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                      {renderIcon(selectedAgent.icon, 'w-7 h-7')}
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold flex items-center gap-2">
+                        {selectedAgent.name}
+                        <Sparkles className="w-5 h-5 text-yellow-300" />
+                      </h2>
+                      <p className="text-white/80 text-sm">{selectedAgent.model} • {selectedAgent.description}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className={`w-2 h-2 rounded-full ${
+                          isConnected ? 'bg-green-400' : 'bg-red-400'
+                        }`} />
+                        <span className="text-xs text-white/70">
+                          {isConnected ? 'Online e pronto' : 'Desconectado'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-xl font-bold">{selectedAgent.name}</h2>
-                    <p className="text-white/80 text-sm">{selectedAgent.model}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
+                      <span className="text-xs font-medium">{messages.length} mensagens</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-gray-50/50 to-white">
                 {messages.length === 0 ? (
-                  <div className="text-center text-gray-500 py-12">
-                    <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <h3 className="text-lg font-medium mb-2">Inicie uma conversa</h3>
-                    <p className="text-sm">Faça uma pergunta sobre análise de documentos acadêmicos</p>
+                  <div className="text-center text-gray-500 py-16">
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-3xl mb-6">
+                      <MessageSquare className="w-10 h-10 text-blue-500" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-800 mb-3">Pronto para começar!</h3>
+                    <p className="text-gray-600 max-w-md mx-auto leading-relaxed">Faça uma pergunta sobre análise de documentos acadêmicos ou peça ajuda com aproveitamento de disciplinas.</p>
+                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto">
+                      <button 
+                        onClick={() => setInputMessage('Como analisar um histórico acadêmico?')}
+                        className="bg-pink-50 hover:bg-pink-100 text-[#CE0058] px-4 py-2 rounded-lg text-sm transition-colors border border-pink-200"
+                      >
+                        💡 Analisar histórico
+                      </button>
+                      <button 
+                        onClick={() => setInputMessage('Quais documentos preciso para transferência?')}
+                        className="bg-purple-50 hover:bg-purple-100 text-purple-700 px-4 py-2 rounded-lg text-sm transition-colors"
+                      >
+                        📄 Documentos necessários
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
+                  messages.map((message) => {
+                    if (message.type === 'typing') {
+                      return (
+                        <div key={message.id} className="flex justify-start">
+                          <div className="bg-white border border-gray-200 rounded-2xl p-4 max-w-[70%] shadow-sm">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-8 h-8 bg-gradient-to-br from-[#CE0058] to-[#B91C5C] rounded-full flex items-center justify-center">
+                                {renderIcon(selectedAgent.icon, 'w-4 h-4')}
+                              </div>
+                              <span className="text-sm font-medium text-gray-700">{selectedAgent.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="flex gap-1">
+                                <div className="w-2 h-2 bg-[#CE0058] rounded-full animate-bounce"></div>
+                                <div className="w-2 h-2 bg-[#CE0058] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                                <div className="w-2 h-2 bg-[#CE0058] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                              </div>
+                              <span className="text-sm text-gray-500">Digitando...</span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    return (
                       <div
-                        className={`max-w-[70%] rounded-lg p-4 ${
-                          message.sender === 'user'
-                            ? 'bg-[#CE0058] text-white'
-                            : 'bg-gray-100 text-[#232323]'
-                        }`}
+                        key={message.id}
+                        className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
-                        <div className="flex items-center gap-2 mb-2">
-                          {message.sender === 'agent' && (
-                            <div className="w-6 h-6 bg-[#CE0058] rounded-full flex items-center justify-center">
-                              <Brain className="w-3 h-3 text-white" />
+                        <div className={`max-w-[80%] ${message.sender === 'user' ? 'ml-12' : 'mr-12'}`}>
+                          {message.sender !== 'user' && (
+                            <div className="flex items-center gap-2 mb-2 ml-1">
+                              <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                                message.type === 'error' ? 'bg-red-100' : 'bg-gradient-to-br from-[#CE0058] to-[#B91C5C]'
+                              }`}>
+                                {message.type === 'error' ? 
+                                  <AlertTriangle className="w-4 h-4 text-red-600" /> :
+                                  renderIcon(selectedAgent.icon, 'w-3 h-3')
+                                }
+                              </div>
+                              <span className="text-sm font-medium text-gray-700">
+                                {message.type === 'error' ? 'Sistema' : message.agentName}
+                              </span>
+                              <div className={`w-2 h-2 rounded-full ${
+                                isConnected ? 'bg-green-400' : 'bg-red-400'
+                              }`} />
                             </div>
                           )}
-                          <span className="text-xs opacity-70">
-                            {message.sender === 'user' ? 'Você' : message.agentName}
-                          </span>
+                          
+                          <div className={`rounded-2xl p-4 shadow-sm ${
+                            message.sender === 'user'
+                              ? 'bg-gradient-to-br from-[#CE0058] to-[#B91C5C] text-white'
+                              : message.type === 'error'
+                              ? 'bg-red-50 border border-red-200 text-red-800'
+                              : 'bg-white border border-gray-200 text-gray-800'
+                          }`}>
+                            <div className="text-sm leading-relaxed whitespace-pre-line">
+                              {message.content}
+                            </div>
+                            <div className={`text-xs mt-3 pt-2 border-t ${
+                              message.sender === 'user' 
+                                ? 'border-white/20 text-white/70'
+                                : message.type === 'error'
+                                ? 'border-red-200 text-red-600'
+                                : 'border-gray-200 text-gray-500'
+                            } flex justify-between items-center`}>
+                              <span>
+                                {message.timestamp.toLocaleTimeString('pt-BR', { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit' 
+                                })}
+                              </span>
+                              {message.sender === 'user' && (
+                                <CheckCircle className="w-3 h-3" />
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-sm leading-relaxed whitespace-pre-line">{message.content}</div>
-                        <span className="text-xs opacity-70 mt-2 block">
-                          {message.timestamp.toLocaleTimeString('pt-BR', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
-                        </span>
                       </div>
-                    </div>
-                  ))
+                    )
+                  })
                 )}
                 
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-gray-100 text-[#232323] rounded-lg p-4 max-w-[70%]">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-6 h-6 bg-[#CE0058] rounded-full flex items-center justify-center">
-                          <Brain className="w-3 h-3 text-white" />
-                        </div>
-                        <span className="text-xs opacity-70">{selectedAgent.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="animate-pulse">⏳</div>
-                        <span className="text-sm">Analisando documentos...</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <div ref={messagesEndRef} />
               </div>
 
               {/* Input */}
-              <div className="border-t border-gray-200 p-4">
-                <div className="flex gap-3">
-                  <input
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => {
-                      console.log('🔍 Input changed:', e.target.value)
-                      setInputMessage(e.target.value)
-                    }}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Digite sua mensagem..."
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#CE0058] focus:border-transparent"
-                    disabled={isLoading}
-                  />
+              <div className="border-t border-gray-200 bg-white p-6">
+                <div className="flex items-end gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <textarea
+                        value={inputMessage}
+                        onChange={(e) => setInputMessage(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault()
+                            handleSendMessage()
+                          }
+                        }}
+                        placeholder="Digite sua mensagem... (Enter para enviar, Shift+Enter para nova linha)"
+                        className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#CE0058] focus:border-transparent resize-none min-h-[50px] max-h-32"
+                        disabled={isLoading || !isConnected}
+                        rows={1}
+                        style={{ 
+                          height: 'auto',
+                          minHeight: '50px'
+                        }}
+                        onInput={(e) => {
+                          const target = e.target as HTMLTextAreaElement
+                          target.style.height = 'auto'
+                          target.style.height = Math.min(target.scrollHeight, 128) + 'px'
+                        }}
+                      />
+                      {inputMessage && (
+                        <button
+                          onClick={() => setInputMessage('')}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        {isConnected ? (
+                          <><CheckCircle className="w-3 h-3 text-green-500" /> Backend conectado</>
+                        ) : (
+                          <><AlertTriangle className="w-3 h-3 text-red-500" /> Backend offline</>
+                        )}
+                      </span>
+                      <span>{inputMessage.length}/2000 caracteres</span>
+                    </div>
+                  </div>
                   <button
-                    onClick={() => {
-                      console.log('🔍 Send button clicked')
-                      handleSendMessage()
-                    }}
-                    disabled={!inputMessage.trim() || isLoading}
-                    className="bg-[#CE0058] text-white px-6 py-3 rounded-lg hover:bg-[#B91C5C] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleSendMessage}
+                    disabled={!inputMessage.trim() || isLoading || !isConnected}
+                    className={`p-4 rounded-2xl transition-all duration-200 ${
+                      !inputMessage.trim() || isLoading || !isConnected
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-br from-[#CE0058] to-[#B91C5C] text-white hover:shadow-lg hover:scale-105 active:scale-95'
+                    }`}
                   >
-                    <Send className="w-5 h-5" />
+                    {isLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Send className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Ações adicionais */}
-            <div className="mt-6 flex justify-center gap-4">
-              <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-[#8E9794]">
-                <FileText className="w-4 h-4" />
-                Exportar Análise
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-[#8E9794]">
-                <Users className="w-4 h-4" />
-                Compartilhar
-              </button>
-            </div>
           </div>
         </div>
       </main>
