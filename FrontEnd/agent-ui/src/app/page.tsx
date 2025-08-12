@@ -1,6 +1,6 @@
 'use client'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
-import { HomePage } from '@/components/dashboard/HomePage'
+import HomePage from '@/components/dashboard/HomePage'
 import { Suspense } from 'react'
 
 export default function Home() {
