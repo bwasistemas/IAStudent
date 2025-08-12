@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { DM_Mono, Geist } from 'next/font/google'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { Toaster } from '@/components/ui/sonner'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { AgentsProvider } from '@/contexts/AgentsContext'
 import './globals.css'
 
 const geistSans = Geist({
@@ -34,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <link
           href="https://fonts.cdnfonts.com/css/gotham"
@@ -42,8 +44,12 @@ export default function RootLayout({
         />
       </head>
       <body className={`${geistSans.variable} ${dmMono.variable} ${gothamFont.variable} font-gotham antialiased`}>
-        <NuqsAdapter>{children}</NuqsAdapter>
-        <Toaster />
+        <AuthProvider>
+          <AgentsProvider>
+            <NuqsAdapter>{children}</NuqsAdapter>
+            <Toaster />
+          </AgentsProvider>
+        </AuthProvider>
       </body>
     </html>
   )

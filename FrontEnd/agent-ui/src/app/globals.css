@@ -40,23 +40,19 @@
 
   body {
     @apply bg-white text-darkGray font-gotham-book;
-    color: rgb(35, 35, 35); /* AFYA Dark Gray for body text */
   }
 
   /* AFYA Typography Hierarchy */
   h1, h2, h3 {
-    @apply font-gotham-light uppercase;
-    color: rgb(35, 35, 35); /* AFYA Dark Gray for headings */
+    @apply font-gotham-light uppercase text-darkGray;
   }
 
   h4, h5, h6 {
-    @apply font-gotham-regular uppercase;
-    color: rgb(35, 35, 35); /* AFYA Dark Gray for smaller headings */
+    @apply font-gotham-regular uppercase text-darkGray;
   }
 
   p, span, div {
-    @apply font-gotham-book;
-    color: rgb(35, 35, 35); /* AFYA Dark Gray for body text */
+    @apply font-gotham-book text-darkGray;
   }
 
   /* AFYA Brand Accent Colors */

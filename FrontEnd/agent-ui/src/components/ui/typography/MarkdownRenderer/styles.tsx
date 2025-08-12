@@ -180,22 +180,25 @@ const Img = ({ src, alt }: ImgProps) => {
 
   if (!src) return null
 
+  // Converter src para string se for Blob
+  const srcString = typeof src === 'string' ? src : src.toString()
+
   return (
     <div className="w-full max-w-xl">
       {error ? (
         <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-md bg-secondary/50 text-muted">
           <Paragraph className="text-primary">Image unavailable</Paragraph>
           <Link
-            href={src}
+            href={srcString}
             target="_blank"
             className="max-w-md truncate underline"
           >
-            {src}
+            {srcString}
           </Link>
         </div>
       ) : (
         <Image
-          src={src}
+          src={srcString}
           width={1280}
           height={720}
           alt={alt ?? 'Rendered image'}

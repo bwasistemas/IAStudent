@@ -47,7 +47,7 @@ Coordenador = Agent(
 TransferenciaExterna = Agent(
     name="Especialista em Transferência Externa e Portador de Diploma",
     model=OpenAIChat(
-        id="gpt-4-turbo-preview",
+        id="gpt-4.1-mini",
         api_key=os.getenv("OPENAI_API_KEY")
     ),
     tools=[],

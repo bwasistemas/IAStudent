@@ -41,6 +41,16 @@ export default {
           900: '#0F172A'
         },
 
+        // AFYA Custom Colors
+        darkGray: '#232323', // AFYA Dark Gray
+        lightGray: '#8E9794', // AFYA Light Gray
+        
+        // AFYA Brand Colors (for direct usage in components)
+        'afya-magenta': '#CE0058',
+        'afya-magenta-hover': '#B91C5C',
+        'afya-dark-gray': '#232323',
+        'afya-light-gray': '#8E9794',
+
         // Feedback Colors
         success: {
           500: '#16A34A'
