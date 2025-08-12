@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useAgents } from '@/contexts/AgentsContext'
+// import { useAgents } from '@/contexts/AgentsContext' // Comentado para usar API do playground
 import { useRouter, useSearchParams } from 'next/navigation'
 import { 
   Brain, 
@@ -43,14 +43,15 @@ interface Document {
   size: string
 }
 
-interface Agent {
-  id: string
+interface PlaygroundAgent {
+  agent_id: string
   name: string
   description: string
-  icon: string
-  color: string
-  model: string
-  instructions: string
+  model: {
+    name: string
+    model: string
+    provider: string
+  }
 }
 
 interface Analysis {
@@ -78,16 +79,33 @@ const MOCK_ANALYSES: Analysis[] = [
 
 export function PlaygroundPage() {
   const { user, logout } = useAuth()
-  const { agents } = useAgents()
+  const [agents, setAgents] = useState<PlaygroundAgent[]>([])
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
+  const [selectedAgent, setSelectedAgent] = useState<PlaygroundAgent | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [, setCurrentAnalysis] = useState<Analysis | null>(null)
   const [uploadedDocuments, setUploadedDocuments] = useState<Document[]>([])
   const [isConnected, setIsConnected] = useState(false)
+  
+  // Carregar agentes da API do playground
+  const loadPlaygroundAgents = async () => {
+    try {
+      const response = await fetch('http://localhost:7777/playground/v1/playground/agents')
+      if (response.ok) {
+        const agentsData = await response.json()
+        setAgents(agentsData)
+        setIsConnected(true)
+      } else {
+        setIsConnected(false)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar agentes:', error)
+      setIsConnected(false)
+    }
+  }
   const [, setBackendStatus] = useState<'checking' | 'connected' | 'error'>('checking')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -138,6 +156,11 @@ export function PlaygroundPage() {
     }
   }
 
+  // Carregar agentes na inicialização
+  useEffect(() => {
+    loadPlaygroundAgents()
+  }, [])
+
   // Verificar backend na inicialização
   useEffect(() => {
     checkBackendStatus()
@@ -170,7 +193,7 @@ export function PlaygroundPage() {
   useEffect(() => {
     const agentId = searchParams.get('agent')
     if (agentId && agents.length > 0 && !selectedAgent) {
-      const agent = agents.find(a => a.id === agentId)
+      const agent = agents.find(a => a.agent_id === agentId)
       if (agent) {
         handleAgentSelect(agent)
       }
@@ -235,50 +258,70 @@ export function PlaygroundPage() {
     setMessages(prev => [...prev, typingMessage])
 
     try {
-      // Fazer requisição real para o backend Agno
-      const response = await fetch('http://localhost:7777/playground/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: currentInput,
-          agent_id: selectedAgent.name,  // Usar nome do agente
-          session_id: `session-${selectedAgent.id}-${Date.now()}`,
-          stream: false
-        })
-      })
+      // Fazer requisição real para o backend Agno usando a rota correta
+      const formData = new FormData()
+      formData.append('message', currentInput)
+      formData.append('stream', 'true')
+      formData.append('session_id', `session-${selectedAgent.agent_id}-${Date.now()}`)
 
-      // Remover mensagem de typing
-      setMessages(prev => prev.filter(m => m.id !== typingMessage.id))
+      const response = await fetch(`http://localhost:7777/playground/v1/playground/agents/${selectedAgent.agent_id}/runs`, {
+        method: 'POST',
+        body: formData
+      })
 
       if (!response.ok) {
         throw new Error(`Erro na resposta: ${response.status}`)
       }
 
-      const data = await response.json()
-      
-      let responseContent = ''
-      if (data.content) {
-        responseContent = Array.isArray(data.content) ? 
-          data.content.map((c: { text?: string; content?: string }) => c.text || c.content || '').join('\n') :
-          data.content
-      } else if (data.message) {
-        responseContent = data.message
-      } else {
-        responseContent = 'Resposta recebida, mas formato inesperado.'
+      // Processar stream de resposta do Agno
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('Não foi possível ler a resposta')
       }
 
-      const agentMessage: Message = {
-        id: Date.now().toString(),
-        content: responseContent,
+      let responseContent = ''
+      const agentMessageId = Date.now().toString()
+
+      // Remover mensagem de typing
+      setMessages(prev => prev.filter(m => m.id !== typingMessage.id))
+
+      // Adicionar mensagem inicial do agente
+      const initialAgentMessage: Message = {
+        id: agentMessageId,
+        content: '',
         sender: 'agent',
         timestamp: new Date(),
         agentName: selectedAgent.name,
         type: 'text'
       }
-      
-      setMessages(prev => [...prev, agentMessage])
+      setMessages(prev => [...prev, initialAgentMessage])
+
+      // Ler stream
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = new TextDecoder().decode(value)
+        const lines = chunk.split('\n').filter(line => line.trim())
+
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line)
+            if (data.event === 'RunResponseContent' && data.content) {
+              responseContent += data.content
+              
+              // Atualizar mensagem do agente em tempo real
+              setMessages(prev => prev.map(msg => 
+                msg.id === agentMessageId 
+                  ? { ...msg, content: responseContent }
+                  : msg
+              ))
+            }
+          } catch (e) {
+            // Ignorar linhas que não são JSON válido
+          }
+        }
+      }
       
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error)
@@ -316,7 +359,7 @@ export function PlaygroundPage() {
     }
   }
 
-  const handleAgentSelect = (agent: Agent) => {
+  const handleAgentSelect = (agent: PlaygroundAgent) => {
     setSelectedAgent(agent)
     setMessages([])
     setCurrentAnalysis(null)
@@ -417,10 +460,9 @@ export function PlaygroundPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {agents.map((agent) => (
-              <div key={agent.id} className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <div key={agent.agent_id} className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                 <div className="text-center">
-                  <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl`}
-                       style={{ backgroundColor: agent.color }}>
+                  <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl bg-[#CE0058]`}>
                     <Image
                       src="/Afya.png"
                       alt="Logo AFYA"
@@ -432,7 +474,7 @@ export function PlaygroundPage() {
                   <h3 className="text-lg font-semibold text-[#232323] mb-2">{agent.name}</h3>
                   <p className="text-sm text-[#8E9794] mb-4">{agent.description}</p>
                   <div className="text-xs text-[#8E9794] mb-4 space-y-1">
-                    <p><strong>Modelo:</strong> {agent.model}</p>
+                    <p><strong>Modelo:</strong> {agent.model.model}</p>
                     <p><strong>Ferramentas:</strong> Dataset de Análises + Web Search</p>
                     <p><strong>Especialidade:</strong> {agent.name === 'Coordenador' ? 'Coordenação Acadêmica' : 
                                                         agent.name === 'Analisador' ? 'Análise de Documentos' : 
@@ -580,7 +622,7 @@ export function PlaygroundPage() {
                         {selectedAgent.name}
                         <Sparkles className="w-5 h-5 text-yellow-200" />
                       </h2>
-                      <p className="text-white/95 text-sm font-medium drop-shadow-sm">{selectedAgent.model} • {selectedAgent.description}</p>
+                      <p className="text-white/95 text-sm font-medium drop-shadow-sm">{selectedAgent.model.model} • {selectedAgent.description}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <div className={`w-2 h-2 rounded-full shadow-sm ${
                           isConnected ? 'bg-green-300' : 'bg-red-300'
@@ -652,7 +694,7 @@ export function PlaygroundPage() {
                           <div className="bg-white border border-gray-200 rounded-2xl p-4 max-w-[70%] shadow-sm">
                             <div className="flex items-center gap-3 mb-2">
                               <div className="w-8 h-8 bg-gradient-to-br from-[#CE0058] to-[#B91C5C] rounded-full flex items-center justify-center">
-                                {renderIcon(selectedAgent.icon, 'w-4 h-4')}
+                                {renderIcon(selectedAgent.name === 'Coordenador' ? '👨‍🏫' : selectedAgent.name === 'Analisador' ? '🔍' : '🎓', 'w-4 h-4')}
                               </div>
                               <span className="text-sm font-medium text-gray-700">{selectedAgent.name}</span>
                             </div>
@@ -682,7 +724,7 @@ export function PlaygroundPage() {
                               }`}>
                                 {message.type === 'error' ? 
                                   <AlertTriangle className="w-4 h-4 text-red-600" /> :
-                                  renderIcon(selectedAgent.icon, 'w-3 h-3')
+                                  renderIcon(selectedAgent.name === 'Coordenador' ? '👨‍🏫' : selectedAgent.name === 'Analisador' ? '🔍' : '🎓', 'w-3 h-3')
                                 }
                               </div>
                               <span className="text-sm font-medium text-gray-700">

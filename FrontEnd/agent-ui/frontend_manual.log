@@ -1,0 +1,197 @@
+
+> agent-ui@0.1.0 dev
+> next dev -p 3000
+
+   ▲ Next.js 15.2.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.20.155:3000
+
+ ✓ Starting...
+ ✓ Ready in 1624ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1299ms (858 modules)
+ GET / 200 in 1700ms
+ ✓ Compiled in 483ms (376 modules)
+ GET / 200 in 40ms
+ ✓ Compiled /_error in 392ms (1173 modules)
+ GET / 200 in 272ms
+ GET / 200 in 9ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 811ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 209ms
+ ✓ Compiled /playground in 270ms (1198 modules)
+ GET /playground?agent=1 200 in 311ms
+ GET /playground?agent=1 200 in 95ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 241ms
+ ✓ Compiled /_not-found in 346ms (1129 modules)
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 434ms
+ GET /playground?agent=1 200 in 94ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 229ms
+ GET /playground?agent=1 200 in 33ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 216ms
+ GET /playground?agent=1 200 in 28ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 209ms
+ GET /playground?agent=1 200 in 23ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 213ms
+ GET /playground?agent=1 200 in 32ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 216ms
+ GET /playground?agent=1 200 in 54ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 212ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 27ms
+ GET /playground?agent=1 200 in 21ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 39ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 215ms
+ ✓ Compiled / in 144ms (541 modules)
+ GET / 200 in 261ms
+ GET / 200 in 57ms
+ ✓ Compiled /_error in 217ms (1198 modules)
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 474ms
+ GET /playground?agent=1 200 in 51ms
+ GET / 200 in 63ms
+ GET / 200 in 31ms
+ GET /playground?agent=1 200 in 18ms
+ GET /playground?agent=1 200 in 33ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 218ms
+ ✓ Compiled /login in 275ms (1206 modules)
+ GET /login 200 in 318ms
+ GET /login 200 in 6ms
+ GET / 200 in 25ms
+ GET /playground?agent=1 200 in 12ms
+ ✓ Compiled /_not-found in 133ms (1210 modules)
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 189ms
+ GET /playground?agent=1 200 in 50ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 240ms
+ ✓ Compiled in 753ms (1220 modules)
+ GET /playground?agent=1 200 in 42ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 217ms
+ GET /playground?agent=1 200 in 46ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 208ms
+ ✓ Compiled in 462ms (1220 modules)
+ GET /playground?agent=1 200 in 59ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 224ms
+ ✓ Compiled in 408ms (1177 modules)
+ GET /playground?agent=1 200 in 63ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /playground?agent=1 200 in 68ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled /_error in 122ms (1206 modules)
+ GET /playground?agent=1 200 in 249ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 207ms
+ GET /playground?agent=1 200 in 25ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 208ms
+ GET /playground?agent=1 200 in 20ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 208ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 336ms (1220 modules)
+ GET /playground?agent=1 200 in 263ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 219ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 312ms (1220 modules)
+ GET /playground?agent=1 200 in 179ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 212ms
+ ✓ Compiled in 404ms (1220 modules)
+ GET /playground?agent=1 200 in 23ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 213ms
+ ✓ Compiled in 474ms (1220 modules)
+ GET /playground?agent=1 200 in 58ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 213ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 263ms (1220 modules)
+ GET /playground?agent=1 200 in 174ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 215ms
+ ✓ Compiled in 257ms (1220 modules)
+ GET /playground?agent=1 200 in 84ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 214ms
+ GET /playground?agent=1 200 in 44ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 210ms
+ GET /playground?agent=1 200 in 29ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 223ms
+ GET /playground?agent=1 200 in 22ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 206ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 301ms (1220 modules)
+ GET /playground?agent=1 200 in 171ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 213ms
+ HEAD / 200 in 71ms
+ GET /playground?agent=1 200 in 26ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 211ms
+ GET /playground?agent=1 200 in 29ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 208ms
+ GET /playground?agent=1 200 in 43ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 224ms
+ GET /playground?agent=1 200 in 24ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 208ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 369ms (1220 modules)
+ GET /playground?agent=1 200 in 216ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 212ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 356ms (1220 modules)
+ GET /playground?agent=1 200 in 194ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 213ms
+ ✓ Compiled in 377ms (1220 modules)
+ GET /playground?agent=1 200 in 25ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 212ms
+ HEAD / 200 in 50ms
+ GET /playground?agent=1 200 in 34ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 213ms
+ GET / 200 in 31ms
+ ✓ Compiled /configuracoes in 492ms (1225 modules)
+ GET /configuracoes 200 in 567ms
+ GET / 200 in 16ms
+ GET /playground?agent=1 200 in 11ms
+ GET / 200 in 9ms
+ GET /configuracoes 200 in 21ms
+ GET / 200 in 5ms
+ GET /playground?agent=1 200 in 8ms
+ GET /playground?agent=2 200 in 23ms
+ GET / 200 in 8ms
+ GET /configuracoes 200 in 20ms
+ GET /configuracoes 200 in 38ms
+ ⨯ A conflicting public file and page file was found for path /favicon.ico https://nextjs.org/docs/messages/conflicting-public-file-page
+ GET /favicon.ico 500 in 223ms
+ GET / 200 in 10ms
+ GET /configuracoes 200 in 35ms
+ GET / 200 in 6ms
+ GET /playground?analysis=1 200 in 7ms
+ GET / 200 in 6ms
+ GET /configuracoes 200 in 24ms
+ GET / 200 in 4ms
+[?25h

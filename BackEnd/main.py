@@ -55,7 +55,7 @@ api_app = FastAPI(title="AFYA Agents API", version="1.0.0")
 # Configurar CORS
 api_app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://localhost:3002", "http://192.168.20.155:3000", "http://192.168.20.155:3001", "http://192.168.20.155:3002"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -538,84 +538,66 @@ tools = [
     )
 ]
 
-# Agentes Agno existentes (mantidos para compatibilidade)
-Coordenador = Agent(
-    name="Coordenador",
-    description="Agente especializado em coordenação acadêmica e análise de documentos",
-    instructions="""Você é um coordenador acadêmico especializado em análise de documentos e coordenação de cursos. 
-    Sua função é auxiliar na análise de documentos acadêmicos, histórico escolar, ementas e outros documentos relacionados a transferências e aproveitamento de disciplinas.
+# Função para criar agentes Agno dinamicamente do banco
+def create_agno_agents():
+    """Cria agentes Agno baseados nos dados do banco"""
+    db_agents = agents_db.get_all_agents()
+    agno_agents = []
     
-    Você tem acesso a um dataset completo de análises dos alunos que inclui:
-    - Informações dos estudantes (nome, IDPS, CPF, contato)
-    - Dados acadêmicos (instituição anterior, curso, créditos, CR)
-    - Análises realizadas pela IA (status, percentual de aproveitamento, observações)
-    - Documentos analisados com feedback da IA
-    - Disciplinas do histórico com detalhes completos
-    - Matriz curricular sugerida pela IA
-    - Status de integração com TOTVS
+    for db_agent in db_agents:
+        if not db_agent['isActive']:
+            continue
+            
+        # Configurar modelo baseado nos parâmetros do banco
+        params = db_agent['parameters']
+        model = OpenAIChat(
+            id=db_agent['model'],
+            api_key=os.getenv("OPENAI_API_KEY"),
+            temperature=params.get('temperature', 0.7),
+            max_tokens=params.get('maxTokens', 2000),
+            top_p=params.get('topP', 0.9),
+            frequency_penalty=params.get('frequencyPenalty', 0.1),
+            presence_penalty=params.get('presencePenalty', 0.1)
+        )
+        
+        # Criar agente Agno
+        agno_agent = Agent(
+            name=db_agent['name'],
+            description=db_agent['description'],
+            instructions=db_agent['instructions'],
+            tools=tools,
+            model=model
+        )
+        
+        agno_agents.append(agno_agent)
     
-    Use a ferramenta 'consultar_analises_alunos' para acessar esses dados quando necessário.
-    
-    Seja sempre profissional, preciso e útil nas suas respostas.""",
-    tools=tools,
-    model=OpenAIChat(
-        id="gpt-4o-mini",
-        api_key=os.getenv("OPENAI_API_KEY")
-    )
-)
+    return agno_agents
 
-Analisador = Agent(
-    name="Analisador",
-    description="Agente especializado em análise de documentos acadêmicos",
-    instructions="""Você é um analisador especializado em documentos acadêmicos como histórico escolar, ementas e outros documentos relacionados a transferências.
-    
-    Sua função é analisar e interpretar documentos acadêmicos para determinar compatibilidade curricular e sugerir aproveitamento de disciplinas.
-    
-    Você tem acesso a um dataset completo de análises dos alunos que inclui:
-    - Histórico completo de análises realizadas
-    - Feedback detalhado da IA sobre cada documento
-    - Comparação de disciplinas e matrizes curriculares
-    - Status de integração com sistemas TOTVS
-    
-    Use a ferramenta 'consultar_analises_alunos' para acessar o histórico de análises e entender padrões de aproveitamento.
-    
-    Seja sempre técnico, preciso e baseado nos dados disponíveis.""",
-    tools=tools,
-    model=OpenAIChat(
-        id="gpt-4o-mini",
-        api_key=os.getenv("OPENAI_API_KEY")
-    )
-)
-
-Especialista = Agent(
-    name="Especialista",
-    description="Agente especialista em regras acadêmicas e procedimentos",
-    instructions="""Você é um especialista em regras acadêmicas, procedimentos de transferência e aproveitamento de disciplinas.
-    
-    Sua função é orientar sobre procedimentos acadêmicos, regras de aproveitamento e integração com sistemas TOTVS.
-    
-    Você tem acesso a um dataset completo de análises dos alunos que inclui:
-    - Casos de sucesso e rejeição
-    - Padrões de aproveitamento por curso
-    - Status de integração com TOTVS
-    - Observações e feedback da IA
-    
-    Use a ferramenta 'consultar_analises_alunos' para entender casos similares e padrões estabelecidos.
-    
-    Seja sempre informativo, baseado em evidências e orientado a procedimentos.""",
-    tools=tools,
-    model=OpenAIChat(
-        id="gpt-4o-mini",
-        api_key=os.getenv("OPENAI_API_KEY")
-    )
-)
-
-# Aplicação do playground Agno
-playground_app = Playground(agents=[Coordenador, Analisador, Especialista])
+# Criar agentes dinamicamente do banco e configurar playground
+dynamic_agents = create_agno_agents()
+playground_app = Playground(agents=dynamic_agents)
 playground_router = playground_app.get_app()
+
+# Configurar CORS para o playground
+playground_router.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://localhost:3002", "http://192.168.20.155:3000", "http://192.168.20.155:3001", "http://192.168.20.155:3002"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
+    allow_headers=["*"],
+)
 
 # Montar as aplicações
 app = FastAPI(title="AFYA Platform", version="1.0.0")
+
+# Configurar CORS para a aplicação principal
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://localhost:3002", "http://192.168.20.155:3000", "http://192.168.20.155:3001", "http://192.168.20.155:3002"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Incluir as rotas do playground
 app.mount("/playground", playground_router)

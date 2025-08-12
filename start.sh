@@ -4,6 +4,17 @@
 
 echo "🚀 Iniciando todos os serviços..."
 
+# Matar processos existentes
+echo "🧹 Parando processos existentes..."
+pkill -f "python main.py" 2>/dev/null || true
+pkill -f "next dev" 2>/dev/null || true
+pkill -f "uvicorn" 2>/dev/null || true
+lsof -ti :3000 | xargs kill -9 2>/dev/null || true
+lsof -ti :7777 | xargs kill -9 2>/dev/null || true
+
+# Aguardar um momento
+sleep 2
+
 # Navegar para o diretório backend
 cd BackEnd
 
@@ -21,16 +32,32 @@ source venv/bin/activate
 echo "📥 Verificando dependências Python..."
 pip install -r requirements.txt --upgrade
 
-# Voltar para o diretório raiz
-cd ..
+# Iniciar backend em background
+echo "🚀 Iniciando backend..."
+nohup python main.py > backend.log 2>&1 &
+BACKEND_PID=$!
 
-# Inicializar todos os serviços simultaneamente
-echo "🎯 Iniciando todos os serviços simultaneamente..."
-cd FrontEnd/agent-ui
+# Aguardar backend inicializar
+sleep 3
 
-# Executar frontend e backends
-npx concurrently \
-  --names "FRONTEND,BACKEND-MAIN" \
-  --prefix-colors "blue,green" \
-  "npm run dev" \
-  "cd ../../BackEnd && source venv/bin/activate && python main.py"
+# Voltar para o diretório do frontend
+cd ../FrontEnd/agent-ui
+
+# Verificar se node_modules existe
+if [ ! -d "node_modules" ]; then
+    echo "📦 Instalando dependências Node.js..."
+    npm install
+fi
+
+# Iniciar frontend
+echo "🚀 Iniciando frontend..."
+npm run dev &
+FRONTEND_PID=$!
+
+echo "✅ Serviços iniciados!"
+echo "🌐 Frontend: http://localhost:3000"
+echo "🔌 Backend: http://localhost:7777"
+echo "🎮 Playground: http://localhost:3000/playground"
+
+# Aguardar processos
+wait

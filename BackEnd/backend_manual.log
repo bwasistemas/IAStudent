@@ -1,0 +1,27 @@
+INFO:     Will watch for changes in these directories: ['/Users/brunoretiro/Desktop/2 - DEVZE/32 - AFYA AGENTES CLAUDE/32 - AFYAAPROVEITAMENTO DE ESTUDOS/BackEnd']
+INFO:     Uvicorn running on http://0.0.0.0:7777 (Press CTRL+C to quit)
+INFO:     Started reloader process [55667] using StatReload
+INFO:     Started server process [55682]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:62871 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62871 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62871 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62880 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62913 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63067 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63067 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63067 - "GET / HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [55682]
+INFO:     Started server process [58604]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:63587 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63587 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63587 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63591 - "OPTIONS /playground/chat HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63593 - "POST /playground/chat HTTP/1.1" 404 Not Found
