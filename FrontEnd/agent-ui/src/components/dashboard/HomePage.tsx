@@ -1210,7 +1210,6 @@ export default function HomePage() {
   const [filtroFilial, setFiltroFilial] = useState<string>('todos')
   const [filtroNivel, setFiltroNivel] = useState<string>('todos')
   const [filtroCurso, setFiltroCurso] = useState<string>('todos')
-  const [filtroProcesso, setFiltroProcesso] = useState<string>('todos')
   const [buscaTexto, setBuscaTexto] = useState<string>('')
 
   // Função para filtrar análises
@@ -1234,8 +1233,6 @@ export default function HomePage() {
       // Filtro por curso
       if (filtroCurso !== 'todos' && analise.curso !== filtroCurso) return false
       
-      // Filtro por processo seletivo
-      if (filtroProcesso !== 'todos' && analise.processoSeletivo !== filtroProcesso) return false
       
       // Busca por texto (nome do estudante, IDPS, etc.)
       if (buscaTexto && !analise.studentName.toLowerCase().includes(buscaTexto.toLowerCase()) && 
@@ -1246,7 +1243,7 @@ export default function HomePage() {
       
       return true
     })
-  }, [filtroStatus, filtroTipo, filtroColigada, filtroFilial, filtroNivel, filtroCurso, filtroProcesso, buscaTexto])
+  }, [filtroStatus, filtroTipo, filtroColigada, filtroFilial, filtroNivel, filtroCurso, buscaTexto])
 
   // Valores únicos para os filtros
   const valoresUnicos = useMemo(() => {
@@ -1599,7 +1596,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
               {/* Filtro por coligada */}
               <div>
                 <label className="block text-sm font-medium text-[#8E9794] mb-2">Coligada</label>
@@ -1660,20 +1657,6 @@ export default function HomePage() {
                 </select>
               </div>
 
-              {/* Filtro por processo seletivo */}
-              <div>
-                <label className="block text-sm font-medium text-[#8E9794] mb-2">Processo</label>
-                <select
-                  value={filtroProcesso}
-                  onChange={(e) => setFiltroProcesso(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CE0058] focus:border-transparent"
-                >
-                  <option value="todos">Todos</option>
-                  {valoresUnicos.processos.map(processo => (
-                    <option key={processo} value={processo}>{processo}</option>
-                  ))}
-                </select>
-              </div>
             </div>
 
             {/* Botão para limpar filtros */}
@@ -1686,7 +1669,6 @@ export default function HomePage() {
                   setFiltroFilial('todos')
                   setFiltroNivel('todos')
                   setFiltroCurso('todos')
-                  setFiltroProcesso('todos')
                   setBuscaTexto('')
                 }}
                 className="px-4 py-2 text-sm text-[#8E9794] hover:text-[#CE0058] transition-colors"
@@ -1710,7 +1692,6 @@ export default function HomePage() {
                   <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">Curso</th>
                   <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">IDPS</th>
                   <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">Processo Seletivo</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">Tipo</th>
                   <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">✅ Status</th>
                   <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">📂 Documentos</th>
                   <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">Data</th>
@@ -1745,40 +1726,55 @@ export default function HomePage() {
                       <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded border">{analysis.idps}</span>
                     </td>
                     <td className="px-4 py-4">
-                      <span className="text-sm text-[#8E9794]">{analysis.processoSeletivo}</span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        analysis.type === 'transferencia' 
-                          ? 'bg-orange-100 text-orange-800' 
-                          : 'bg-purple-100 text-purple-800'
-                      }`}>
-                        {analysis.type === 'transferencia' ? 'Transferência' : 'Portador'}
-                      </span>
+                      <div className="space-y-1">
+                        <span className="text-sm text-[#8E9794]">{analysis.processoSeletivo}</span>
+                        <div>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            analysis.type === 'transferencia' 
+                              ? 'bg-orange-100 text-orange-800' 
+                              : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {analysis.type === 'transferencia' ? 'Transferência' : 'Portador'}
+                          </span>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-4">
                       <StatusBadge status={analysis.status} />
                     </td>
                     <td className="px-4 py-4">
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-[#232323]">
-                            {analysis.documents.length} documento{analysis.documents.length !== 1 ? 's' : ''}
-                          </span>
-                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                            {analysis.documents.filter(d => d.aiStatus === 'analisado').length} analisado{analysis.documents.filter(d => d.aiStatus === 'analisado').length !== 1 ? 's' : ''}
-                          </span>
+                        <div className="flex flex-wrap gap-1">
+                          {analysis.documents.slice(0, 2).map((doc) => (
+                            <span
+                              key={doc.id}
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border transition-colors ${
+                                doc.aiStatus === 'analisado' ? 'bg-green-100 text-green-800 border-green-200' :
+                                doc.aiStatus === 'em_analise' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                                doc.aiStatus === 'pendente' ? 'bg-gray-100 text-gray-800 border-gray-200' :
+                                doc.aiStatus === 'rejeitado' ? 'bg-red-100 text-red-800 border-red-200' :
+                                'bg-gray-100 text-gray-800 border-gray-200'
+                              }`}
+                              title={doc.name}
+                            >
+                              {doc.type === 'historico' && <FileText className="w-3 h-3" />}
+                              {doc.type === 'ementa' && <GraduationCap className="w-3 h-3" />}
+                              {doc.name.split('.')[0].substring(0, 8)}...
+                            </span>
+                          ))}
                         </div>
-                        <button 
-                          onClick={() => {
-                            // TODO: Abrir modal com lista de documentos
-                            console.log('Ver documentos:', analysis.documents)
-                          }}
-                          className="text-xs text-[#CE0058] hover:text-[#B91C5C] font-medium flex items-center gap-1 transition-colors"
-                        >
-                          <Eye className="w-3 h-3" />
-                          Ver documentos
-                        </button>
+                        {analysis.documents.length > 2 && (
+                          <button 
+                            onClick={() => {
+                              // TODO: Abrir modal com lista completa de documentos
+                              console.log('Ver todos os documentos:', analysis.documents)
+                            }}
+                            className="text-xs text-[#CE0058] hover:text-[#B91C5C] font-medium flex items-center gap-1 transition-colors"
+                          >
+                            <Eye className="w-3 h-3" />
+                            Ver mais ({analysis.documents.length - 2} documentos)
+                          </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -1794,7 +1790,7 @@ export default function HomePage() {
                     </td>
                     <td className="px-4 py-4">
                       <button 
-                        onClick={() => router.push(`/analise/${analysis.id}`)}
+                        onClick={() => router.push(`/playground?analysis=${analysis.id}`)}
                         className="bg-[#CE0058] hover:bg-[#B91C5C] text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
                       >
                         <Eye className="w-3 h-3" />
