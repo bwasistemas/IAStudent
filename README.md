@@ -9,25 +9,56 @@ Uma plataforma moderna e inteligente para gerenciamento de aproveitamento de est
 - **Perfis de usuário**: Administrador e Coordenador
 - **Sessões persistentes** com localStorage
 - **Proteção de rotas** para usuários não autenticados
+- **Logout** integrado no header principal
 
 ### 🤖 Gestão de Agentes de IA
 - **Criação e edição** de agentes especializados
 - **Configuração avançada** de parâmetros de IA
 - **Base de Conhecimento RAG** integrada
-- **Modelos configuráveis** (GPT-4.1-mini, GPT-4-turbo-preview)
+- **Modelos configuráveis** (GPT-4o-mini, GPT-4-turbo-preview)
 - **Ativação/desativação** de agentes
+- **Ferramentas integradas** para consulta de dataset e busca web
 
 ### 📚 Análise de Documentos Acadêmicos
 - **Histórico Escolar** - análise automática de disciplinas
 - **Ementas de disciplinas** - comparação e validação
 - **Cálculo de equivalências** baseado em parâmetros AFYA
 - **Sugestões de alocação** de estudantes
+- **Visualização detalhada** de documentos anexados
+- **Status de análise da IA** com percentuais de aproveitamento
+- **Matriz curricular sugerida** pela IA para TOTVS Educacional
 
 ### 🎯 Dashboard Inteligente
 - **Interface moderna** com design responsivo
-- **Contexto institucional** sempre visível
+- **Contexto institucional** sempre visível (Coligada, Filial, Nível de Ensino)
 - **Navegação intuitiva** entre funcionalidades
 - **Indicadores visuais** de status e progresso
+- **Sistema de filtros avançado** para análises recentes
+- **Tabela de análises** com informações completas (IDPS, Processo Seletivo, Curso)
+
+### 💬 Playground de Agentes IA
+- **Interface de conversa** com agentes especializados
+- **Seleção dinâmica** de agentes
+- **Histórico de mensagens** persistente
+- **Upload de documentos** para análise
+- **Ferramentas integradas** para consulta de dataset
+- **Respostas contextuais** baseadas em dados reais
+
+### 🗂️ Sistema de Filtros e Busca
+- **Filtros por status** (Aprovado, Rejeitado, Pendente)
+- **Filtros por tipo** (Transferência, Portador de Diploma)
+- **Filtros institucionais** (Coligada, Filial, Nível de Ensino)
+- **Filtros acadêmicos** (Curso, Processo Seletivo)
+- **Busca textual** em todas as análises
+- **Limpeza de filtros** com um clique
+
+### 📊 Visualização de Documentos
+- **Modal detalhado** para cada documento
+- **Informações do estudante** (CPF, email, telefone, data de nascimento)
+- **Dados acadêmicos** (instituição anterior, curso, créditos, CR)
+- **Disciplinas do histórico** com código, nome e carga horária
+- **Status de integração TOTVS** com detalhes de sincronização
+- **Matriz curricular sugerida** pela IA com disciplinas aproveitadas
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -37,6 +68,7 @@ Uma plataforma moderna e inteligente para gerenciamento de aproveitamento de est
 - **Tailwind CSS** - Framework CSS utilitário
 - **React Context** - Gerenciamento de estado global
 - **Lucide React** - Ícones modernos e consistentes
+- **nuqs** - Gerenciamento de parâmetros de URL
 
 ### Backend
 - **FastAPI** - Framework Python para APIs
@@ -44,12 +76,14 @@ Uma plataforma moderna e inteligente para gerenciamento de aproveitamento de est
 - **Agno** - Framework para agentes de IA
 - **OpenAI GPT-4** - Modelos de linguagem avançados
 - **SQLite** - Banco de dados para persistência
+- **Python-dotenv** - Gerenciamento de variáveis de ambiente
 
 ### Integrações
 - **OpenAI API** - Acesso aos modelos GPT
 - **RAG (Retrieval-Augmented Generation)** - Base de conhecimento inteligente
 - **Vector Databases** - Armazenamento de embeddings
 - **RESTful APIs** - Comunicação entre serviços
+- **Dataset de análises** - Base de dados completa de estudantes
 
 ## 🚀 Como Executar
 
@@ -106,7 +140,7 @@ O projeto estará disponível em:
 ### Coordenador
 - **Email**: `ana.coordenadora@afya.edu.br`
 - **Senha**: `123123`
-- **Permissões**: Consulta de agentes, análise de documentos
+- **Permissões**: Consulta de agentes, análise de documentos, playground
 
 ## 🏗️ Arquitetura do Sistema
 
@@ -115,13 +149,22 @@ O projeto estará disponível em:
 ├── FrontEnd/agent-ui/          # Interface React/Next.js
 │   ├── src/
 │   │   ├── app/               # Páginas da aplicação
+│   │   │   ├── page.tsx      # Página inicial (dashboard)
+│   │   │   ├── login/        # Sistema de autenticação
+│   │   │   ├── playground/   # Interface de conversa com agentes
+│   │   │   └── configuracoes/ # Painel administrativo
 │   │   ├── components/        # Componentes reutilizáveis
+│   │   │   ├── auth/         # Componentes de autenticação
+│   │   │   ├── dashboard/    # Componentes do dashboard
+│   │   │   ├── playground/   # Componentes do playground
+│   │   │   └── ui/           # Componentes de interface
 │   │   ├── contexts/          # Contextos React (Auth, Agents)
 │   │   ├── hooks/             # Hooks customizados
 │   │   └── types/             # Definições de tipos TypeScript
-│   └── public/                # Arquivos estáticos
+│   └── public/                # Arquivos estáticos (logos, favicons)
 ├── BackEnd/                   # API FastAPI
-│   ├── main.py               # Servidor principal
+│   ├── main.py               # Servidor principal com agentes
+│   ├── database.py           # Gerenciamento de banco SQLite
 │   ├── requirements.txt      # Dependências Python
 │   └── venv/                 # Ambiente virtual Python
 └── start.sh                  # Script de inicialização
@@ -133,21 +176,33 @@ O projeto estará disponível em:
 - Gerenciamento de autenticação
 - Controle de sessões
 - Proteção de rotas
+- Usuários mock para desenvolvimento
 
 #### 🤖 AgentsContext
 - Estado global dos agentes
-- Operações CRUD
+- Operações CRUD via API
 - Sincronização entre componentes
+- Gerenciamento de erros e loading
 
 #### 🎛️ ConfiguracoesPage
 - Interface administrativa
-- Gestão de agentes
-- Configuração de parâmetros
+- Gestão de agentes (CRUD)
+- Configuração de parâmetros avançados
+- Reset para configurações padrão
 
 #### 🏠 HomePage
 - Dashboard principal
 - Lista de agentes ativos
-- Navegação do sistema
+- Tabela de análises recentes
+- Sistema de filtros avançado
+- Contexto institucional fixo
+
+#### 💬 PlaygroundPage
+- Interface de conversa com agentes
+- Seleção dinâmica de agentes
+- Upload e análise de documentos
+- Histórico de mensagens
+- Integração com ferramentas de IA
 
 ## 🎨 Design System
 
@@ -164,14 +219,16 @@ O projeto estará disponível em:
 - **Modais** responsivos e acessíveis
 - **Cards** com gradientes e sombras
 - **Tipografia** hierárquica e legível
+- **Tabelas** com ordenação e filtros
+- **Badges** para status e tipos
 
 ## 🔧 Configuração de Agentes
 
 ### Parâmetros Configuráveis
 - **Nome e Descrição** do agente
 - **Ícone e Cor** para identificação visual
-- **Modelo de IA** (GPT-4.1-mini, GPT-4-turbo-preview)
-- **Instruções** personalizadas
+- **Modelo de IA** (GPT-4o-mini, GPT-4-turbo-preview)
+- **Instruções** personalizadas em texto único
 - **Base de Conhecimento** (RAG, Vector, Database)
 - **Parâmetros de Modelo**:
   - Temperature (0-2)
@@ -187,12 +244,55 @@ O projeto estará disponível em:
 - **Endpoint configurável** para APIs externas
 - **Coleções** para organização de documentos
 
+### Ferramentas Integradas
+- **Dataset Query**: Consulta ao dataset completo de análises
+- **Web Search**: Busca de informações atualizadas na internet
+- **Document Analysis**: Análise automática de documentos acadêmicos
+
 ## 📱 Responsividade
 
 - **Mobile-first** design
 - **Breakpoints** otimizados
 - **Componentes adaptativos**
 - **Navegação touch-friendly**
+- **Tabelas responsivas** com scroll horizontal
+
+## 🔍 Sistema de Filtros
+
+### Filtros Disponíveis
+- **Status**: Aprovado, Rejeitado, Pendente
+- **Tipo**: Transferência Externa, Portador de Diploma
+- **Coligada**: PVT SOFTWARE
+- **Filial**: Vila Velha/ES
+- **Nível de Ensino**: Graduação
+- **Curso**: Filtro por curso específico
+- **Processo Seletivo**: Filtro por processo
+- **Busca Textual**: Pesquisa em todos os campos
+
+### Funcionalidades
+- **Filtros combinados** para busca precisa
+- **Limpeza automática** de filtros
+- **Persistência** de filtros ativos
+- **Contadores** de resultados filtrados
+
+## 📊 Visualização de Documentos
+
+### Informações Exibidas
+- **Dados do Documento**: Nome, tipo, data de upload, tamanho
+- **Status da IA**: Analisado, Em análise, Pendente, Rejeitado
+- **Recomendação da IA**: Feedback detalhado sobre aproveitamento
+- **Percentual de Aproveitamento**: Barra de progresso visual
+- **Informações do Estudante**: CPF, email, telefone, data de nascimento
+- **Dados Acadêmicos**: Instituição anterior, curso, créditos, CR
+- **Disciplinas do Histórico**: Código, nome, carga horária, semestre, nota
+- **Status TOTVS**: Integrado, Pendente, Erro com detalhes de sincronização
+- **Matriz Curricular Sugerida**: Curso sugerido, disciplinas aproveitadas
+
+### Funcionalidades
+- **Modal responsivo** com todas as informações
+- **Navegação por abas** para organizar conteúdo
+- **Botões de ação** para aproveitamento de disciplinas
+- **Indicadores visuais** de status e progresso
 
 ## 🚀 Deploy
 
@@ -245,6 +345,33 @@ npm run lint         # Verificação de código
 - `refactor:` Refatoração
 - `test:` Testes
 - `chore:` Tarefas de manutenção
+
+## 🔧 Configuração do Banco de Dados
+
+### SQLite (tmp/agents.db)
+- **Tabela agents**: Armazenamento de configurações de agentes
+- **Auto-incremento** de IDs
+- **Timestamps** de criação e atualização
+- **Inicialização automática** com agentes padrão
+- **Reset para configurações padrão** via interface administrativa
+
+### Estrutura da Tabela
+```sql
+CREATE TABLE agents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    color TEXT NOT NULL,
+    model TEXT NOT NULL,
+    instructions TEXT NOT NULL,
+    knowledge_base TEXT NOT NULL,
+    parameters TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+```
 
 ## 📞 Suporte
 

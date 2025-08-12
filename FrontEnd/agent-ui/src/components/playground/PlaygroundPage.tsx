@@ -40,7 +40,7 @@ interface Agent {
   id: string
   name: string
   description: string
-  icon: React.ReactNode
+  icon: string
   color: string
   model: string
   instructions: string
@@ -53,8 +53,6 @@ interface Analysis {
   status: 'aprovado' | 'rejeitado' | 'pendente'
   documents: Document[]
 }
-
-
 
 // Dados mock para análises
 const MOCK_ANALYSES: Analysis[] = [
@@ -83,19 +81,20 @@ export function PlaygroundPage() {
   const [currentAnalysis, setCurrentAnalysis] = useState<Analysis | null>(null)
   const [uploadedDocuments, setUploadedDocuments] = useState<Document[]>([])
 
-  // Converter os agentes para o formato esperado pelo componente
-  const AGENTS = agents.map(agent => ({
-    id: agent.id,
-    name: agent.name,
-    description: agent.description,
-    icon: agent.icon === 'brain' ? <Brain className="w-6 h-6" /> : 
-          agent.icon === 'graduation-cap' ? <GraduationCap className="w-6 h-6" /> :
-          agent.icon === 'users' ? <Users className="w-6 h-6" /> :
-          <Shield className="w-6 h-6" />,
-    color: agent.color,
-    model: agent.model,
-    instructions: agent.instructions
-  }))
+  // Função para renderizar ícone baseado no nome do ícone
+  const renderIcon = (iconName: string) => {
+    console.log('🔍 renderIcon called with:', iconName)
+    switch (iconName) {
+      case '👨‍🏫':
+        return <GraduationCap className="w-6 h-6" />
+      case '🔍':
+        return <Shield className="w-6 h-6" />
+      case '📊':
+        return <Users className="w-6 h-6" />
+      default:
+        return <Brain className="w-6 h-6" />
+    }
+  }
 
   // Verificar se há uma análise específica na URL
   useEffect(() => {
@@ -120,13 +119,90 @@ export function PlaygroundPage() {
     }
   }, [searchParams])
 
+  // Verificar se há um agente selecionado na URL
+  useEffect(() => {
+    const agentId = searchParams.get('agent')
+    console.log('🔍 URL agent ID:', agentId)
+    console.log('🔍 Available agents:', agents)
+    
+    if (agentId && agents.length > 0) {
+      const agent = agents.find(a => a.id === agentId)
+      console.log('🔍 Found agent:', agent)
+      if (agent) {
+        handleAgentSelect(agent)
+      }
+    }
+  }, [searchParams, agents])
+
+  // Debug: Log quando selectedAgent muda
+  useEffect(() => {
+    console.log('🔍 Selected agent changed:', selectedAgent)
+  }, [selectedAgent])
+
+  // Debug: Log quando messages mudam
+  useEffect(() => {
+    console.log('🔍 Messages changed:', messages)
+  }, [messages])
+
+  // Debug: Log quando inputMessage muda
+  useEffect(() => {
+    console.log('🔍 Input message changed:', inputMessage)
+  }, [inputMessage])
+
+  // Debug: Log quando isLoading muda
+  useEffect(() => {
+    console.log('🔍 Loading state changed:', isLoading)
+  }, [isLoading])
+
+  // Debug: Log quando uploadedDocuments muda
+  useEffect(() => {
+    console.log('🔍 Uploaded documents changed:', uploadedDocuments)
+  }, [uploadedDocuments])
+
+  // Debug: Log quando currentAnalysis muda
+  useEffect(() => {
+    console.log('🔍 Current analysis changed:', currentAnalysis)
+  }, [currentAnalysis])
+
+  // Debug: Log quando agents muda
+  useEffect(() => {
+    console.log('🔍 Agents changed:', agents)
+  }, [agents])
+
+  // Debug: Log quando searchParams muda
+  useEffect(() => {
+    console.log('🔍 Search params changed:', searchParams.toString())
+  }, [searchParams])
+
+  // Debug: Log quando user muda
+  useEffect(() => {
+    console.log('🔍 User changed:', user)
+  }, [user])
+
+  // Debug: Log quando router muda
+  useEffect(() => {
+    console.log('🔍 Router changed:', router)
+  }, [router])
+
+  // Debug: Log quando logout muda
+  useEffect(() => {
+    console.log('🔍 Logout function changed:', logout)
+  }, [logout])
+
   const handleLogout = () => {
     logout()
     router.push('/login')
   }
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || !selectedAgent) return
+    console.log('🔍 handleSendMessage called')
+    console.log('🔍 inputMessage:', inputMessage)
+    console.log('🔍 selectedAgent:', selectedAgent)
+    
+    if (!inputMessage.trim() || !selectedAgent) {
+      console.log('🔍 Early return - no message or agent')
+      return
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -135,12 +211,14 @@ export function PlaygroundPage() {
       timestamp: new Date()
     }
 
+    console.log('🔍 Adding user message:', userMessage)
     setMessages(prev => [...prev, userMessage])
     setInputMessage('')
     setIsLoading(true)
 
     // Simular resposta inteligente do agente baseada no contexto
     setTimeout(() => {
+      console.log('🔍 Simulating agent response')
       let response = ''
       
       if (currentAnalysis && uploadedDocuments.length > 0) {
@@ -166,8 +244,8 @@ ${inputMessage.toLowerCase().includes('aproveitamento') ?
 
 Como posso ajudá-lo com mais detalhes específicos?`
       } else {
-              // Resposta geral do agente
-      response = `Olá! Sou o ${selectedAgent.name}. 
+        // Resposta geral do agente
+        response = `Olá! Sou o ${selectedAgent.name}. 
 
 ${selectedAgent.instructions.split('\n').slice(0, 5).join('\n')}
 
@@ -177,6 +255,8 @@ ${inputMessage.toLowerCase().includes('documento') ?
 }`
       }
 
+      console.log('🔍 Agent response:', response)
+
       const agentMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: response,
@@ -185,19 +265,24 @@ ${inputMessage.toLowerCase().includes('documento') ?
         agentName: selectedAgent.name,
         documents: uploadedDocuments
       }
+      
+      console.log('🔍 Adding agent message:', agentMessage)
       setMessages(prev => [...prev, agentMessage])
       setIsLoading(false)
     }, 2000)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
+    console.log('🔍 Key pressed:', e.key)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
+      console.log('🔍 Enter pressed, calling handleSendMessage')
       handleSendMessage()
     }
   }
 
   const handleDocumentUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('🔍 handleDocumentUpload called')
     const files = event.target.files
     if (files) {
       const newDocs: Document[] = Array.from(files).map((file, index) => ({
@@ -209,16 +294,35 @@ ${inputMessage.toLowerCase().includes('documento') ?
         uploadedAt: new Date().toISOString(),
         size: `${(file.size / 1024 / 1024).toFixed(1)}MB`
       }))
+      console.log('🔍 New documents:', newDocs)
       setUploadedDocuments(prev => [...prev, ...newDocs])
     }
   }
 
-  const handleAgentSelect = (agent: Agent) => {
+  const handleAgentSelect = (agent: any) => {
+    console.log('🔍 handleAgentSelect called with:', agent)
+    
     setSelectedAgent(agent)
     // Resetar mensagens e análise quando um novo agente é selecionado
     setMessages([])
     setCurrentAnalysis(null)
     setUploadedDocuments([])
+    
+    // Adicionar mensagem inicial do agente
+    const initialMessage: Message = {
+      id: 'agent-intro',
+      content: `Olá! Sou o ${agent.name}. 
+
+${agent.instructions.split('\n').slice(0, 5).join('\n')}
+
+Como posso ajudá-lo com a análise de documentos acadêmicos?`,
+      sender: 'agent',
+      timestamp: new Date(),
+      agentName: agent.name
+    }
+    
+    console.log('🔍 Setting initial message:', initialMessage)
+    setMessages([initialMessage])
   }
 
   if (!selectedAgent) {
@@ -302,12 +406,12 @@ ${inputMessage.toLowerCase().includes('documento') ?
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {AGENTS.map((agent) => (
+            {agents.map((agent) => (
               <div key={agent.id} className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                 <div className="text-center">
                   <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl`}
                        style={{ backgroundColor: agent.color }}>
-                    {agent.icon}
+                    {renderIcon(agent.icon)}
                   </div>
                   <h3 className="text-lg font-semibold text-[#232323] mb-2">{agent.name}</h3>
                   <p className="text-sm text-[#8E9794] mb-4">{agent.description}</p>
@@ -443,10 +547,10 @@ ${inputMessage.toLowerCase().includes('documento') ?
           <div className="lg:col-span-3">
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm h-[600px] flex flex-col">
               {/* Chat Header */}
-              <div className={`bg-gradient-to-r ${selectedAgent.color} text-white p-6 rounded-t-xl`}>
+              <div className="bg-gradient-to-r from-[#CE0058] to-[#B91C5C] text-white p-6 rounded-t-xl">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                    {selectedAgent.icon}
+                    {renderIcon(selectedAgent.icon)}
                   </div>
                   <div>
                     <h2 className="text-xl font-bold">{selectedAgent.name}</h2>
@@ -522,14 +626,20 @@ ${inputMessage.toLowerCase().includes('documento') ?
                   <input
                     type="text"
                     value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
+                    onChange={(e) => {
+                      console.log('🔍 Input changed:', e.target.value)
+                      setInputMessage(e.target.value)
+                    }}
                     onKeyPress={handleKeyPress}
                     placeholder="Digite sua mensagem..."
                     className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#CE0058] focus:border-transparent"
                     disabled={isLoading}
                   />
                   <button
-                    onClick={handleSendMessage}
+                    onClick={() => {
+                      console.log('🔍 Send button clicked')
+                      handleSendMessage()
+                    }}
                     disabled={!inputMessage.trim() || isLoading}
                     className="bg-[#CE0058] text-white px-6 py-3 rounded-lg hover:bg-[#B91C5C] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
