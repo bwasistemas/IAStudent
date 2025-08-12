@@ -15,7 +15,9 @@ import {
   GraduationCap, 
   Users,
   Shield,
-  LogOut
+  LogOut,
+  Settings,
+  AlertCircle
 } from 'lucide-react'
 import Image from 'next/image'
 
@@ -67,10 +69,11 @@ const COLOR_OPTIONS = [
 export function ConfiguracoesPage() {
   const { user, logout } = useAuth()
   const router = useRouter()
-  const { agents, addAgent, updateAgent, deleteAgent } = useAgents()
+  const { agents, addAgent, updateAgent, deleteAgent, resetToDefaultAgents, loading, error } = useAgents()
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [activeTab, setActiveTab] = useState<'agents' | 'users' | 'system'>('agents')
+  const [saving, setSaving] = useState(false)
 
   // Verificar se o usuário é administrador
   const isAdmin = user?.role === 'admin'
@@ -131,6 +134,8 @@ export function ConfiguracoesPage() {
     
     const agentWithDefaults = {
       ...agent,
+      // Garantir que instructions seja sempre uma string
+      instructions: typeof agent.instructions === 'string' ? agent.instructions : '',
       knowledgeBase: {
         ...defaultKnowledgeBase,
         ...(agent.knowledgeBase || {})
@@ -144,22 +149,55 @@ export function ConfiguracoesPage() {
     setIsCreating(false)
   }
 
-  const handleSaveAgent = () => {
+  const handleSaveAgent = async () => {
     if (!editingAgent) return
 
-    if (isCreating) {
-      addAgent(editingAgent)
-    } else {
-      updateAgent(editingAgent)
+    // Verificar se todas as propriedades necessárias existem
+    if (!editingAgent.name || !editingAgent.description || !editingAgent.instructions) {
+      console.error('Propriedades obrigatórias não preenchidas:', editingAgent)
+      return
     }
 
-    setEditingAgent(null)
-    setIsCreating(false)
+    // Verificar se instructions é uma string
+    if (typeof editingAgent.instructions !== 'string') {
+      console.error('Instructions deve ser uma string:', editingAgent.instructions)
+      return
+    }
+
+    // Verificar se instructions não está vazio após trim
+    if (!editingAgent.instructions.trim()) {
+      console.error('Instructions não pode estar vazio')
+      return
+    }
+
+    try {
+      setSaving(true)
+      
+      let success: boolean
+      if (isCreating) {
+        success = await addAgent(editingAgent)
+      } else {
+        success = await updateAgent(editingAgent)
+      }
+
+      if (success) {
+        setEditingAgent(null)
+        setIsCreating(false)
+      }
+    } catch (err) {
+      console.error('Erro ao salvar agente:', err)
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const handleDeleteAgent = (agentId: string) => {
+  const handleDeleteAgent = async (agentId: string) => {
     if (confirm('Tem certeza que deseja excluir este agente?')) {
-      deleteAgent(agentId)
+      try {
+        await deleteAgent(agentId)
+      } catch (err) {
+        console.error('Erro ao deletar agente:', err)
+      }
     }
   }
 
@@ -197,28 +235,35 @@ export function ConfiguracoesPage() {
                 <ArrowLeft className="w-5 h-5 text-[#8E9794]" />
               </button>
               <Image
-                src="/Afya.png"
-                alt="Logomarca Afya"
-                width={32}
-                height={32}
+                src="/AfyaCompleto.png"
+                alt="Logomarca AFYA"
+                width={120}
+                height={40}
                 className="object-contain"
               />
               <span className="text-lg font-bold text-[#232323]">Configurações do Sistema</span>
             </div>
             
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-[#CE0058] rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">
-                    {user?.name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <span className="text-sm font-medium text-[#232323]">{user?.name}</span>
-                <span className="px-2 py-1 bg-[#CE0058] text-white text-xs rounded-full">Admin</span>
-              </div>
+              <button
+                onClick={async () => {
+                  if (confirm('Tem certeza que deseja resetar todos os agentes para as configurações padrão? Esta ação não pode ser desfeita.')) {
+                    try {
+                      await resetToDefaultAgents()
+                    } catch (err) {
+                      console.error('Erro ao resetar agentes:', err)
+                    }
+                  }
+                }}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm"
+                title="Resetar agentes para padrões"
+              >
+                Resetar Agentes
+              </button>
               <button
                 onClick={handleLogout}
-                className="text-[#CE0058] hover:text-[#B91C5C] transition-colors"
+                className="p-2 text-[#8E9794] hover:text-[#CE0058] transition-colors"
+                title="Sair"
               >
                 <LogOut className="w-5 h-5" />
               </button>
@@ -227,50 +272,41 @@ export function ConfiguracoesPage() {
         </div>
       </header>
 
-      {/* Tabs */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8">
-            <button
-              onClick={() => setActiveTab('agents')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'agents'
-                  ? 'border-[#CE0058] text-[#CE0058]'
-                  : 'border-transparent text-[#8E9794] hover:text-[#232323]'
-              }`}
-            >
-              Agentes de IA
-            </button>
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'users'
-                  ? 'border-[#CE0058] text-[#CE0058]'
-                  : 'border-transparent text-[#8E9794] hover:text-[#232323]'
-              }`}
-            >
-              Usuários
-            </button>
-            <button
-              onClick={() => setActiveTab('system')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'system'
-                  ? 'border-[#CE0058] text-[#CE0058]'
-                  : 'border-transparent text-[#8E9794] hover:text-[#232323]'
-              }`}
-            >
-              Sistema
-            </button>
+      {/* Conteúdo Principal */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tabs */}
+        <div className="border-b border-gray-200 mb-8">
+          <nav className="-mb-px flex space-x-8">
+            {[
+              { id: 'agents', label: 'Agentes de IA', icon: Brain },
+              { id: 'users', label: 'Usuários', icon: Users },
+              { id: 'system', label: 'Sistema', icon: Settings }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                  activeTab === tab.id
+                    ? 'border-[#CE0058] text-[#CE0058]'
+                    : 'border-transparent text-[#8E9794] hover:text-[#232323] hover:border-gray-300'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
           </nav>
         </div>
-      </div>
 
-      {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Conteúdo das Tabs */}
         {activeTab === 'agents' && (
           <div>
+            {/* Header da seção */}
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold text-[#232323]">Gerenciar Agentes de IA</h1>
+              <div>
+                <h2 className="text-2xl font-bold text-[#232323]">Agentes de IA</h2>
+                <p className="text-[#8E9794] mt-1">Gerencie os agentes de inteligência artificial do sistema</p>
+              </div>
               <button
                 onClick={handleCreateAgent}
                 className="bg-[#CE0058] text-white px-4 py-2 rounded-lg hover:bg-[#B91C5C] transition-colors flex items-center gap-2"
@@ -280,61 +316,107 @@ export function ConfiguracoesPage() {
               </button>
             </div>
 
-            {/* Lista de Agentes */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {agents.map((agent) => (
-                <div key={agent.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br ${agent.color}`}>
-                      {agent.icon === 'brain' && <Brain className="w-6 h-6 text-white" />}
-                      {agent.icon === 'graduation-cap' && <GraduationCap className="w-6 h-6 text-white" />}
-                      {agent.icon === 'users' && <Users className="w-6 h-6 text-white" />}
-                      {agent.icon === 'shield' && <Shield className="w-6 h-6 text-white" />}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEditAgent(agent)}
-                        className="p-2 text-[#8E9794] hover:text-[#CE0058] transition-colors"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteAgent(agent.id)}
-                        className="p-2 text-[#8E9794] hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-lg font-semibold text-[#232323] mb-2">{agent.name}</h3>
-                  <p className="text-sm text-[#8E9794] mb-3">{agent.description}</p>
-                  
-                  <div className="flex items-center justify-between text-xs text-[#8E9794]">
-                    <span>Modelo: {agent.model}</span>
-                    <span className={`px-2 py-1 rounded-full ${
-                      agent.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {agent.isActive ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </div>
+            {/* Indicadores de estado */}
+            {loading && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span className="text-blue-700">Carregando agentes...</span>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500" />
+                  <span className="text-red-700">Erro: {error}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Lista de agentes */}
+            {!loading && agents.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {agents.map((agent) => (
+                  <div key={agent.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${agent.color} bg-gradient-to-br`}>
+                          {agent.icon === 'brain' && <Brain className="w-6 h-6 text-white" />}
+                          {agent.icon === 'graduation-cap' && <GraduationCap className="w-6 h-6 text-white" />}
+                          {agent.icon === 'users' && <Users className="w-6 h-6 text-white" />}
+                          {agent.icon === 'shield' && <Shield className="w-6 h-6 text-white" />}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-[#232323]">{agent.name}</h3>
+                          <p className="text-sm text-[#8E9794]">{agent.model}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEditAgent(agent)}
+                          className="p-2 text-[#8E9794] hover:text-[#CE0058] transition-colors"
+                          title="Editar"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteAgent(agent.id)}
+                          className="p-2 text-[#8E9794] hover:text-red-500 transition-colors"
+                          title="Excluir"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-[#8E9794] mb-4 line-clamp-2">{agent.description}</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${agent.isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                        <span className="text-xs text-[#8E9794]">
+                          {agent.isActive ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </div>
+                      <span className="text-xs text-[#8E9794]">
+                        {new Date(agent.updatedAt).toLocaleDateString('pt-BR')}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!loading && agents.length === 0 && (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Brain className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-[#8E9794] mb-2">Nenhum agente encontrado</h3>
+                <p className="text-sm text-[#8E9794]">Clique em "Novo Agente" para criar o primeiro agente do sistema.</p>
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === 'users' && (
-          <div>
-            <h1 className="text-2xl font-bold text-[#232323] mb-6">Gerenciar Usuários</h1>
-            <p className="text-[#8E9794]">Funcionalidade em desenvolvimento...</p>
+          <div className="text-center py-12">
+            <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+            <h3 className="text-lg font-medium text-[#8E9794] mb-2">Gestão de Usuários</h3>
+            <p className="text-sm text-[#8E9794]">Funcionalidade em desenvolvimento.</p>
           </div>
         )}
 
         {activeTab === 'system' && (
-          <div>
-            <h1 className="text-2xl font-bold text-[#232323] mb-6">Configurações do Sistema</h1>
-            <p className="text-[#8E9794]">Funcionalidade em desenvolvimento...</p>
+          <div className="text-center py-12">
+            <Settings className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+            <h3 className="text-lg font-medium text-[#8E9794] mb-2">Configurações do Sistema</h3>
+            <p className="text-sm text-[#8E9794]">Funcionalidade em desenvolvimento.</p>
           </div>
         )}
       </main>
@@ -671,11 +753,18 @@ export function ConfiguracoesPage() {
               </button>
                               <button
                   onClick={handleSaveAgent}
-                  disabled={!editingAgent.name || !editingAgent.description || !editingAgent.instructions.trim()}
+                  disabled={!editingAgent.name || !editingAgent.description || !(editingAgent.instructions && typeof editingAgent.instructions === 'string' && editingAgent.instructions.trim()) || saving}
                   className="bg-[#CE0058] text-white px-6 py-2 rounded-lg hover:bg-[#B91C5C] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Save className="w-4 h-4 inline mr-2" />
-                  Salvar Agente
+                  {saving ? (
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <Save className="w-4 h-4 inline mr-2" />
+                  )}
+                  {isCreating ? 'Criar Agente' : 'Salvar Agente'}
                 </button>
             </div>
           </div>

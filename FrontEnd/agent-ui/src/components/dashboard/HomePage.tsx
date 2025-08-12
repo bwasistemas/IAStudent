@@ -250,8 +250,8 @@ const QuickActionCard = ({ action }: { action: QuickAction }) => (
 // Componente principal
 export function HomePage() {
   const { user, logout } = useAuth()
+  const { agents, loading, error } = useAgents()
   const router = useRouter()
-  const { agents } = useAgents()
 
 
   return (
@@ -263,13 +263,12 @@ export function HomePage() {
             {/* Logo */}
             <div className="flex items-center gap-3">
               <Image
-                src="/Afya.png"
-                alt="Logomarca Afya"
-                width={40}
+                src="/AfyaCompleto.png"
+                alt="Logomarca AFYA"
+                width={120}
                 height={40}
                 className="object-contain"
               />
-              <span className="text-xl font-bold text-[#232323]">AFYA</span>
             </div>
 
             {/* Menu de navegação */}
@@ -386,7 +385,23 @@ export function HomePage() {
             </p>
           </div>
           
-          {agents.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Brain className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-[#8E9794] mb-2">Carregando agentes...</h3>
+              <p className="text-sm text-[#8E9794]">Aguarde enquanto os agentes são carregados.</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-red-500" />
+              </div>
+              <h3 className="text-lg font-medium text-[#8E9794] mb-2">Erro ao carregar agentes</h3>
+              <p className="text-sm text-[#8E9794]">Não foi possível carregar os agentes de IA. Tente novamente mais tarde.</p>
+            </div>
+          ) : agents.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {agents.map((agent) => (
                 <div key={agent.id} className={`bg-gradient-to-br ${agent.color} rounded-xl p-8 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]`}>

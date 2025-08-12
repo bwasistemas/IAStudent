@@ -29,142 +29,160 @@ export interface Agent {
   updatedAt: string
 }
 
-interface AgentsContextType {
+type AgentsContextType = {
   agents: Agent[]
-  setAgents: (agents: Agent[]) => void
-  addAgent: (agent: Agent) => void
-  updateAgent: (agent: Agent) => void
-  deleteAgent: (agentId: string) => void
-  getActiveAgents: () => Agent[]
+  addAgent: (agent: Agent) => Promise<boolean>
+  updateAgent: (agent: Agent) => Promise<boolean>
+  deleteAgent: (agentId: string) => Promise<boolean>
+  resetToDefaultAgents: () => Promise<boolean>
+  loading: boolean
+  error: string | null
 }
 
 const AgentsContext = createContext<AgentsContextType | undefined>(undefined)
 
-// Agentes padrão iniciais
-const DEFAULT_AGENTS: Agent[] = [
-  {
-    id: '1',
-    name: 'Coordenador de Aproveitamento',
-    description: 'Especialista em validação de disciplinas e cálculo de equivalências',
-    icon: 'brain',
-    color: 'from-[#CE0058] to-[#B91C5C]',
-    model: 'gpt-4.1-mini',
-    instructions: `Você é um Coordenador de Curso de Graduação especializado em validar disciplinas para aproveitamento de estudos.
-
-Sua função é analisar documentos acadêmicos de alunos e determinar equivalências entre disciplinas.
-
-Ao receber documentos, você deve:
-1. Analisar o conteúdo programático das disciplinas apresentadas
-2. Comparar com as disciplinas da matriz curricular do curso
-3. Calcular o percentual de equivalência/aproveitamento
-4. Indicar quais disciplinas podem ser aproveitadas e o percentual de compatibilidade
-5. Justificar suas decisões com base no conteúdo programático e carga horária
-
-IMPORTANTE: Sempre consulte a Base de Conhecimento disponível para obter informações atualizadas sobre matrizes curriculares, ementas e disciplinas antes de fazer suas análises.`,
-    knowledgeBase: {
-      enabled: true,
-      type: 'rag',
-      endpoint: 'http://localhost:8000',
-      collection: 'documents'
-    },
-    parameters: {
-      temperature: 0.7,
-      maxTokens: 1000,
-      topP: 0.9,
-      frequencyPenalty: 0.5,
-      presencePenalty: 0.5
-    },
-    isActive: true,
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-15'
-  },
-  {
-    id: '2',
-    name: 'Especialista em Transferência',
-    description: 'Transferência Externa e Portador de Diploma',
-    icon: 'graduation-cap',
-    color: 'from-[#232323] to-[#475569]',
-    model: 'gpt-4.1-mini',
-    instructions: `Você é um especialista em processos de Transferência Externa e Portador de Diploma.
-
-Sua especialidade é analisar históricos acadêmicos de outras instituições de ensino superior.
-
-Para cada análise você deve:
-1. Verificar a autenticidade e validade dos documentos apresentados
-2. Analisar o histórico escolar completo do estudante
-3. Identificar disciplinas cursadas com aprovação (nota ≥ 6.0 ou conceito equivalente)
-4. Comparar ementa e carga horária com as disciplinas da matriz curricular atual
-5. Calcular percentual de equivalência por disciplina (0-100%)
-6. Sugerir aproveitamento total, parcial ou não aproveitamento
-
-IMPORTANTE: Sempre consulte a Base de Conhecimento disponível para obter informações atualizadas sobre matrizes curriculares, ementas e disciplinas antes de fazer suas análises.`,
-    knowledgeBase: {
-      enabled: true,
-      type: 'rag',
-      endpoint: 'http://localhost:8000',
-      collection: 'documents'
-    },
-    parameters: {
-      temperature: 0.7,
-      maxTokens: 1000,
-      topP: 0.9,
-      frequencyPenalty: 0.5,
-      presencePenalty: 0.5
-    },
-    isActive: true,
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-15'
-  }
-]
+// API base URL
+const API_BASE_URL = 'http://localhost:7777/api'
 
 export function AgentsProvider({ children }: { children: ReactNode }) {
-  const [agents, setAgents] = useState<Agent[]>(() => {
-    // Carregar agentes do localStorage se disponível
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('afya-agents')
-      if (saved) {
-        try {
-          return JSON.parse(saved)
-        } catch {
-          return DEFAULT_AGENTS
-        }
+  const [agents, setAgents] = useState<Agent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Carregar agentes da API
+  const loadAgents = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch(`${API_BASE_URL}/agents`)
+      if (!response.ok) {
+        throw new Error(`Erro ao carregar agentes: ${response.status}`)
       }
+      
+      const data = await response.json()
+      setAgents(data)
+    } catch (err) {
+      console.error('Erro ao carregar agentes:', err)
+      setError(err instanceof Error ? err.message : 'Erro desconhecido')
+    } finally {
+      setLoading(false)
     }
-    return DEFAULT_AGENTS
-  })
+  }
 
-  // Salvar agentes no localStorage sempre que mudarem
+  // Carregar agentes na inicialização
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('afya-agents', JSON.stringify(agents))
+    loadAgents()
+  }, [])
+
+  // Adicionar agente
+  const addAgent = async (agent: Agent): Promise<boolean> => {
+    try {
+      setError(null)
+      
+      const response = await fetch(`${API_BASE_URL}/agents`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(agent),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Erro ao criar agente: ${response.status}`)
+      }
+
+      // Recarregar agentes
+      await loadAgents()
+      return true
+    } catch (err) {
+      console.error('Erro ao criar agente:', err)
+      setError(err instanceof Error ? err.message : 'Erro desconhecido')
+      return false
     }
-  }, [agents])
-
-  const addAgent = (agent: Agent) => {
-    setAgents(prev => [...prev, agent])
   }
 
-  const updateAgent = (updatedAgent: Agent) => {
-    setAgents(prev => prev.map(agent => 
-      agent.id === updatedAgent.id ? updatedAgent : agent
-    ))
+  // Atualizar agente
+  const updateAgent = async (agent: Agent): Promise<boolean> => {
+    try {
+      setError(null)
+      
+      const response = await fetch(`${API_BASE_URL}/agents/${agent.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(agent),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Erro ao atualizar agente: ${response.status}`)
+      }
+
+      // Recarregar agentes
+      await loadAgents()
+      return true
+    } catch (err) {
+      console.error('Erro ao atualizar agente:', err)
+      setError(err instanceof Error ? err.message : 'Erro desconhecido')
+      return false
+    }
   }
 
-  const deleteAgent = (agentId: string) => {
-    setAgents(prev => prev.filter(agent => agent.id !== agentId))
+  // Deletar agente
+  const deleteAgent = async (agentId: string): Promise<boolean> => {
+    try {
+      setError(null)
+      
+      const response = await fetch(`${API_BASE_URL}/agents/${agentId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error(`Erro ao deletar agente: ${response.status}`)
+      }
+
+      // Recarregar agentes
+      await loadAgents()
+      return true
+    } catch (err) {
+      console.error('Erro ao deletar agente:', err)
+      setError(err instanceof Error ? err.message : 'Erro desconhecido')
+      return false
+    }
   }
 
-  const getActiveAgents = () => {
-    return agents.filter(agent => agent.isActive)
+  // Resetar para agentes padrão
+  const resetToDefaultAgents = async (): Promise<boolean> => {
+    try {
+      setError(null)
+      
+      const response = await fetch(`${API_BASE_URL}/agents/reset`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        throw new Error(`Erro ao resetar agentes: ${response.status}`)
+      }
+
+      // Recarregar agentes
+      await loadAgents()
+      return true
+    } catch (err) {
+      console.error('Erro ao resetar agentes:', err)
+      setError(err instanceof Error ? err.message : 'Erro desconhecido')
+      return false
+    }
   }
 
   const value: AgentsContextType = {
     agents,
-    setAgents,
     addAgent,
     updateAgent,
     deleteAgent,
-    getActiveAgents
+    resetToDefaultAgents,
+    loading,
+    error
   }
 
   return (
@@ -177,7 +195,7 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
 export function useAgents() {
   const context = useContext(AgentsContext)
   if (context === undefined) {
-    throw new Error('useAgents must be used within an AgentsProvider')
+    throw new Error('useAgents deve ser usado dentro de um AgentsProvider')
   }
   return context
 }

@@ -45,23 +45,18 @@ export default function LoginForm() {
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-        {/* Logo/Header */}
+        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-            <Image
-              src="/Afya.png"
-              alt="Logomarca Afya"
-              width={80}
-              height={80}
-              className="object-contain"
-            />
-          </div>
+          <Image
+            src="/AfyaCompleto.png"
+            alt="Logomarca AFYA"
+            width={200}
+            height={80}
+            className="mx-auto mb-6"
+          />
           <h1 className="text-2xl font-bold text-[#232323] mb-2">
-            Plataforma de Agentes IA Acadêmicos
+            PLATAFORMA DE AGENTES IA
           </h1>
-          <p className="text-[#8E9794] text-sm">
-            Aproveitamento de Estudos
-          </p>
         </div>
 
         {/* Formulário */}
@@ -120,8 +115,11 @@ export default function LoginForm() {
 
         {/* Footer */}
         <div className="mt-8 text-center">
-          <p className="text-xs text-[#8E9794]">
-            Sistema exclusivo para coordenadores de curso
+          <p className="text-sm font-medium text-[#CE0058] mb-2">
+            O MAIOR HUB DE EDUCAÇÃO
+          </p>
+          <p className="text-xs text-[#8E9794] leading-relaxed">
+            E SOLUÇÕES PARA A PRÁTICA MÉDICA DO BRASIL
           </p>
         </div>
       </div>

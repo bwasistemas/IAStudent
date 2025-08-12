@@ -1,33 +1,21 @@
 import type { Metadata } from 'next'
-import { DM_Mono, Geist } from 'next/font/google'
-import { NuqsAdapter } from 'nuqs/adapters/next/app'
-import { Toaster } from '@/components/ui/sonner'
+import { Inter } from 'next/font/google'
+import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { AgentsProvider } from '@/contexts/AgentsContext'
-import './globals.css'
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { Toaster } from '@/components/ui/sonner'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  weight: '400',
-  subsets: ['latin']
-})
-
-const dmMono = DM_Mono({
-  subsets: ['latin'],
-  variable: '--font-dm-mono',
-  weight: '400'
-})
-
-// Gotham font configuration for AFYA brand
-const gothamFont = {
-  variable: '--font-gotham',
-  fallback: ['Helvetica Neue', 'Arial', 'sans-serif']
-}
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'AFYA Agent UI',
-  description:
-    'A modern chat interface for AI agents built with Next.js, Tailwind CSS, and TypeScript. Featuring AFYA brand identity and professional design.'
+  title: 'AFYA | Agentes de IA',
+  description: 'Plataforma de Agentes de IA Acadêmicos para Aproveitamento de Estudos',
+  icons: {
+    icon: '/Afya.png',
+    shortcut: '/Afya.png',
+    apple: '/Afya.png',
+  },
 }
 
 export default function RootLayout({
@@ -43,7 +31,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${geistSans.variable} ${dmMono.variable} ${gothamFont.variable} font-gotham antialiased`}>
+      <body className={`${inter.className} font-gotham antialiased`}>
         <AuthProvider>
           <AgentsProvider>
             <NuqsAdapter>{children}</NuqsAdapter>
