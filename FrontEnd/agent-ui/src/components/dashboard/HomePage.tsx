@@ -658,7 +658,8 @@ const StatCard = ({ stat }: { stat: Statistic }) => (
 )
 
 
-// Componente de badge de documento
+// Componente de badge de documento (não utilizado atualmente)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DocumentBadge = ({ document }: { document: Document }) => {
   const [showModal, setShowModal] = useState(false)
 
@@ -1371,8 +1372,6 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Funcionalidades principais */}
-        {/* Removido: menus de transferência e portador de diploma */}
 
         {/* Seção dos Agentes de IA */}
         <div className="mb-12">
@@ -1760,11 +1759,26 @@ export default function HomePage() {
                     <td className="px-4 py-4">
                       <StatusBadge status={analysis.status} />
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-2">
-                        {analysis.documents.map((doc) => (
-                          <DocumentBadge key={doc.id} document={doc} />
-                        ))}
+                    <td className="px-4 py-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-[#232323]">
+                            {analysis.documents.length} documento{analysis.documents.length !== 1 ? 's' : ''}
+                          </span>
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            {analysis.documents.filter(d => d.aiStatus === 'analisado').length} analisado{analysis.documents.filter(d => d.aiStatus === 'analisado').length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            // TODO: Abrir modal com lista de documentos
+                            console.log('Ver documentos:', analysis.documents)
+                          }}
+                          className="text-xs text-[#CE0058] hover:text-[#B91C5C] font-medium flex items-center gap-1 transition-colors"
+                        >
+                          <Eye className="w-3 h-3" />
+                          Ver documentos
+                        </button>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -1778,21 +1792,14 @@ export default function HomePage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-[#8E9794]">{analysis.coordinator}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => router.push(`/analise/${analysis.id}`)}
-                          className="text-[#CE0058] hover:text-[#B91C5C] text-sm font-medium transition-colors"
-                        >
-                          Ver Detalhes
-                        </button>
-                        <button 
-                          onClick={() => router.push(`/playground?analysis=${analysis.id}`)}
-                          className="text-[#8E9794] hover:text-[#CE0058] text-sm font-medium transition-colors"
-                        >
-                          IA
-                        </button>
-                      </div>
+                    <td className="px-4 py-4">
+                      <button 
+                        onClick={() => router.push(`/analise/${analysis.id}`)}
+                        className="bg-[#CE0058] hover:bg-[#B91C5C] text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+                      >
+                        <Eye className="w-3 h-3" />
+                        Ver Análise
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -1801,26 +1808,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Sidebar de atalhos */}
-        <div className="fixed right-8 top-1/2 transform -translate-y-1/2 hidden xl:block">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-4 w-64">
-            <h3 className="font-semibold text-[#232323] mb-4">Atalhos Rápidos</h3>
-            <div className="space-y-3">
-              <a href="#" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <span className="text-sm text-[#8E9794]">3 documentos em revisão</span>
-              </a>
-              <a href="#" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <span className="text-sm text-[#8E9794]">1 alerta importante</span>
-              </a>
-              <a href="#" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-[#8E9794]">5 análises concluídas</span>
-              </a>
-            </div>
-          </div>
-        </div>
       </main>
     </div>
   )
