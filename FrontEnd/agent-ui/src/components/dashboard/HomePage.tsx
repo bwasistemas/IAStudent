@@ -1212,6 +1212,32 @@ export default function HomePage() {
   const [filtroCurso, setFiltroCurso] = useState<string>('todos')
   const [buscaTexto, setBuscaTexto] = useState<string>('')
 
+  // Função para obter o agent_id do playground baseado no nome do agente
+  const getPlaygroundAgentId = async (agentName: string): Promise<string | null> => {
+    try {
+      const response = await fetch('http://localhost:7777/playground/v1/playground/agents')
+      if (response.ok) {
+        const playgroundAgents = await response.json()
+        const playgroundAgent = playgroundAgents.find((pa: any) => pa.name === agentName)
+        return playgroundAgent?.agent_id || null
+      }
+    } catch (error) {
+      console.error('Erro ao buscar agent_id do playground:', error)
+    }
+    return null
+  }
+
+  // Função para navegar para o playground com o agent_id correto
+  const handleStartConversation = async (agent: Agent) => {
+    const playgroundAgentId = await getPlaygroundAgentId(agent.name)
+    if (playgroundAgentId) {
+      router.push(`/playground?agent=${playgroundAgentId}`)
+    } else {
+      // Fallback para o ID do banco se não encontrar no playground
+      router.push(`/playground?agent=${agent.id}`)
+    }
+  }
+
   // Função para filtrar análises
   const analisesFiltradas = useMemo(() => {
     return MOCK_ANALYSES.filter(analise => {
@@ -1517,7 +1543,7 @@ export default function HomePage() {
                     
                     {/* Botão de ação */}
                     <button
-                      onClick={() => router.push(`/playground?agent=${agent.id}`)}
+                      onClick={() => handleStartConversation(agent)}
                       className="w-full bg-gradient-to-r from-[#CE0058] to-[#B91C5C] text-white px-6 py-3 rounded-xl font-semibold hover:from-[#B91C5C] hover:to-[#CE0058] transition-all duration-300 text-sm shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
                     >
                       <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform" />

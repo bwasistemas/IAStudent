@@ -217,6 +217,7 @@ export function PlaygroundPage() {
     router.push('/login')
   }
 
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || !selectedAgent || isLoading) {
       return
@@ -294,34 +295,75 @@ export function PlaygroundPage() {
         agentName: selectedAgent.name,
         type: 'text'
       }
-      setMessages(prev => [...prev, initialAgentMessage])
+      console.log('🆕 Criando mensagem inicial:', initialAgentMessage)
+      setMessages(prev => {
+        const updated = [...prev, initialAgentMessage]
+        console.log('📋 Mensagens após adicionar inicial:', updated)
+        return updated
+      })
 
       // Ler stream
+      let buffer = ''
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
 
         const chunk = new TextDecoder().decode(value)
-        const lines = chunk.split('\n').filter(line => line.trim())
-
-        for (const line of lines) {
-          try {
-            const data = JSON.parse(line)
-            if (data.event === 'RunResponseContent' && data.content) {
-              responseContent += data.content
+        buffer += chunk
+        
+        // Processar JSONs completos do buffer
+        let braceCount = 0
+        let jsonStart = -1
+        
+        for (let i = 0; i < buffer.length; i++) {
+          if (buffer[i] === '{') {
+            if (braceCount === 0) jsonStart = i
+            braceCount++
+          } else if (buffer[i] === '}') {
+            braceCount--
+            if (braceCount === 0 && jsonStart !== -1) {
+              // JSON completo encontrado
+              const jsonStr = buffer.substring(jsonStart, i + 1)
+              try {
+                const data = JSON.parse(jsonStr)
+                console.log('🔍 Evento:', data.event, '| Content:', data.content)
+                
+                if ((data.event === 'RunResponseContent' || data.event === 'RunCompleted') && data.content) {
+                  responseContent += data.content
+                  console.log('📝 Content acumulado:', responseContent)
+                  
+                  // Atualizar mensagem do agente em tempo real
+                  setMessages(prev => {
+                    const updated = prev.map(msg => 
+                      msg.id === agentMessageId 
+                        ? { ...msg, content: responseContent, isStreaming: data.event !== 'RunCompleted' }
+                        : msg
+                    )
+                    console.log('🔄 Mensagens atualizadas:', updated)
+                    return updated
+                  })
+                } else {
+                  console.log('❌ Evento ignorado ou sem content')
+                }
+              } catch (e) {
+                console.log('⚠️ JSON inválido:', jsonStr)
+              }
               
-              // Atualizar mensagem do agente em tempo real
-              setMessages(prev => prev.map(msg => 
-                msg.id === agentMessageId 
-                  ? { ...msg, content: responseContent }
-                  : msg
-              ))
+              // Remover JSON processado do buffer
+              buffer = buffer.substring(i + 1)
+              i = -1 // Reiniciar loop
+              jsonStart = -1
             }
-          } catch (e) {
-            // Ignorar linhas que não são JSON válido
           }
         }
       }
+
+      // Garantir que a mensagem final esteja marcada como não-streaming
+      setMessages(prev => prev.map(msg => 
+        msg.id === agentMessageId 
+          ? { ...msg, content: responseContent, isStreaming: false }
+          : msg
+      ))
       
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error)
