@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from agno.agent import Agent
+from agno.tools import Function
 from agno.models.openai import OpenAIChat
 from agno.playground import Playground
 from agno.storage.sqlite import SqliteStorage
@@ -149,73 +150,468 @@ async def reset_agents():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao resetar agentes: {str(e)}")
 
+def web_search(query: str) -> str:
+    """Simula uma busca na web"""
+    return f"Resultados simulados para: {query}"
+
+def consultar_analises_alunos(
+    filtro_estudante: str = "",
+    filtro_status: str = "",
+    filtro_curso: str = "",
+    filtro_coligada: str = "",
+    incluir_documentos: bool = True,
+    incluir_disciplinas: bool = True,
+    incluir_matriz_sugerida: bool = True
+) -> str:
+    """
+    Consulta o dataset completo de análises dos alunos.
+    
+    Args:
+        filtro_estudante: Nome ou IDPS do estudante para filtrar
+        filtro_status: Status da análise (aprovado, rejeitado, pendente)
+        filtro_curso: Curso específico para filtrar
+        filtro_coligada: Coligada específica para filtrar
+        incluir_documentos: Se deve incluir detalhes dos documentos
+        incluir_disciplinas: Se deve incluir disciplinas do histórico
+        incluir_matriz_sugerida: Se deve incluir matriz curricular sugerida
+    
+    Returns:
+        String formatada com as análises encontradas
+    """
+    # Dataset mock das análises (em produção viria do banco de dados)
+    analises = [
+        {
+            "id": "1",
+            "estudante": {
+                "nome": "João Silva",
+                "idps": "156",
+                "cpf": "123.456.789-00",
+                "email": "joao.silva@email.com",
+                "telefone": "(27) 99999-9999",
+                "dataNascimento": "1995-03-15"
+            },
+            "academico": {
+                "instituicaoAnterior": "Universidade Federal do Espírito Santo",
+                "cursoAnterior": "Engenharia Civil",
+                "creditosConcluidos": 85,
+                "totalCreditos": 100,
+                "cr": 8.5
+            },
+            "analise": {
+                "tipo": "transferencia",
+                "status": "aprovado",
+                "dataAnalise": "2024-01-15T10:30:00Z",
+                "agenteIA": "Agente de Análise Curricular",
+                "percentualAproveitamento": 85,
+                "observacoes": "Excelente aproveitamento em disciplinas de exatas. Recomenda-se validação manual para disciplinas específicas."
+            },
+            "contexto": {
+                "coligada": "1. PVT SOFTWARE",
+                "filial": "1. Vila Velha ES",
+                "nivelEnsino": "Graduação",
+                "curso": "Engenharia de Software",
+                "processoSeletivo": "2023/2024"
+            },
+            "documentos": [
+                {
+                    "id": "doc1",
+                    "nome": "Historico 2023.pdf",
+                    "tipo": "historico",
+                    "statusIA": "analisado",
+                    "recomendacao": "Aproveitamento de 85% - Disciplinas de Matemática e Física compatíveis",
+                    "integracaoTOTVS": {
+                        "status": "integrado",
+                        "ultimaSincronizacao": "2024-01-15T11:00:00Z"
+                    }
+                },
+                {
+                    "id": "doc2",
+                    "nome": "Ementa Matematica.pdf",
+                    "tipo": "ementa",
+                    "statusIA": "analisado",
+                    "recomendacao": "Conteúdo 90% compatível com Cálculo I e II",
+                    "integracaoTOTVS": {
+                        "status": "integrado",
+                        "ultimaSincronizacao": "2024-01-14T15:00:00Z"
+                    }
+                }
+            ],
+            "disciplinas": [
+                {
+                    "codigo": "MAT001",
+                    "nome": "Cálculo I",
+                    "cargaHoraria": 60,
+                    "creditos": 4,
+                    "semestre": 1,
+                    "nota": 8.5,
+                    "status": "aprovado"
+                },
+                {
+                    "codigo": "MAT002",
+                    "nome": "Cálculo II",
+                    "cargaHoraria": 60,
+                    "creditos": 4,
+                    "semestre": 2,
+                    "nota": 8.0,
+                    "status": "aprovado"
+                },
+                {
+                    "codigo": "FIS001",
+                    "nome": "Física I",
+                    "cargaHoraria": 60,
+                    "creditos": 4,
+                    "semestre": 1,
+                    "nota": 7.5,
+                    "status": "aprovado"
+                }
+            ],
+            "matrizSugerida": {
+                "cursoSugerido": "Engenharia de Software",
+                "instituicao": "AFYA - Vila Velha",
+                "totalAproveitamento": 85,
+                "observacoes": "Excelente aproveitamento em disciplinas de exatas. Recomenda-se validação de disciplinas específicas de programação.",
+                "aproveitamentoDisciplinas": [
+                    {
+                        "origem": "Cálculo I",
+                        "destino": "Cálculo I",
+                        "aproveitamento": "total",
+                        "compatibilidade": 95,
+                        "observacoes": "Disciplina totalmente compatível"
+                    },
+                    {
+                        "origem": "Física I",
+                        "destino": "Física I",
+                        "aproveitamento": "total",
+                        "compatibilidade": 88,
+                        "observacoes": "Disciplina totalmente compatível"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "2",
+            "estudante": {
+                "nome": "Maria Santos",
+                "idps": "189",
+                "cpf": "987.654.321-00",
+                "email": "maria.santos@email.com",
+                "telefone": "(27) 88888-8888",
+                "dataNascimento": "1998-07-22"
+            },
+            "academico": {
+                "instituicaoAnterior": "Instituto Federal do Espírito Santo",
+                "cursoAnterior": "Técnico em Mecatrônica",
+                "creditosConcluidos": 45,
+                "totalCreditos": 50,
+                "cr": 9.2
+            },
+            "analise": {
+                "tipo": "transferencia",
+                "status": "aprovado",
+                "dataAnalise": "2024-01-14T14:20:00Z",
+                "agenteIA": "Agente de Análise de Ementas",
+                "percentualAproveitamento": 92,
+                "observacoes": "Excelente compatibilidade curricular. Todas as disciplinas foram validadas automaticamente."
+            },
+            "contexto": {
+                "coligada": "1. PVT SOFTWARE",
+                "filial": "1. Vila Velha ES",
+                "nivelEnsino": "Graduação",
+                "curso": "Ciência da Computação",
+                "processoSeletivo": "2023/2024"
+            },
+            "documentos": [
+                {
+                    "id": "doc4",
+                    "nome": "Historico 2022.pdf",
+                    "tipo": "historico",
+                    "statusIA": "analisado",
+                    "recomendacao": "Aproveitamento de 92% - Excelente compatibilidade curricular",
+                    "integracaoTOTVS": {
+                        "status": "integrado",
+                        "ultimaSincronizacao": "2024-01-14T10:00:00Z"
+                    }
+                }
+            ],
+            "disciplinas": [
+                {
+                    "codigo": "MAT001",
+                    "nome": "Matemática Aplicada",
+                    "cargaHoraria": 60,
+                    "creditos": 4,
+                    "semestre": 1,
+                    "nota": 9.0,
+                    "status": "aprovado"
+                },
+                {
+                    "codigo": "FIS001",
+                    "nome": "Física Aplicada",
+                    "cargaHoraria": 60,
+                    "creditos": 4,
+                    "semestre": 1,
+                    "nota": 9.5,
+                    "status": "aprovado"
+                }
+            ],
+            "matrizSugerida": {
+                "cursoSugerido": "Ciência da Computação",
+                "instituicao": "AFYA - Vila Velha",
+                "totalAproveitamento": 92,
+                "observacoes": "Excelente aproveitamento em disciplinas de exatas. Todas as disciplinas foram validadas automaticamente.",
+                "aproveitamentoDisciplinas": [
+                    {
+                        "origem": "Matemática Aplicada",
+                        "destino": "Cálculo I",
+                        "aproveitamento": "total",
+                        "compatibilidade": 95,
+                        "observacoes": "Disciplina totalmente compatível"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "3",
+            "estudante": {
+                "nome": "Carlos Ferreira",
+                "idps": "134",
+                "cpf": "999.888.777-66",
+                "email": "carlos.ferreira@email.com",
+                "telefone": "(27) 55555-5555",
+                "dataNascimento": "1994-09-25"
+            },
+            "academico": {
+                "instituicaoAnterior": "Universidade Estadual do Rio de Janeiro",
+                "cursoAnterior": "Administração",
+                "creditosConcluidos": 45,
+                "totalCreditos": 100,
+                "cr": 6.8
+            },
+            "analise": {
+                "tipo": "transferencia",
+                "status": "rejeitado",
+                "dataAnalise": "2024-01-13T11:20:00Z",
+                "agenteIA": "Agente de Análise Curricular",
+                "percentualAproveitamento": 45,
+                "observacoes": "Baixa compatibilidade curricular. Necessita revisão manual e possível complementação."
+            },
+            "contexto": {
+                "coligada": "1. PVT SOFTWARE",
+                "filial": "1. Vila Velha ES",
+                "nivelEnsino": "Graduação",
+                "curso": "Engenharia Civil",
+                "processoSeletivo": "2023/2024"
+            },
+            "documentos": [
+                {
+                    "id": "doc7",
+                    "nome": "Historico 2021.pdf",
+                    "tipo": "historico",
+                    "statusIA": "analisado",
+                    "recomendacao": "Aproveitamento de 45% - Baixa compatibilidade curricular",
+                    "integracaoTOTVS": {
+                        "status": "erro",
+                        "ultimaSincronizacao": "2024-01-13T12:00:00Z",
+                        "mensagemErro": "Documento rejeitado pela IA - Baixa compatibilidade"
+                    }
+                }
+            ],
+            "disciplinas": [
+                {
+                    "codigo": "ADM001",
+                    "nome": "Administração Geral",
+                    "cargaHoraria": 60,
+                    "creditos": 4,
+                    "semestre": 1,
+                    "nota": 7.0,
+                    "status": "aprovado"
+                },
+                {
+                    "codigo": "ECO001",
+                    "nome": "Economia",
+                    "cargaHoraria": 60,
+                    "creditos": 4,
+                    "semestre": 2,
+                    "nota": 6.5,
+                    "status": "aprovado"
+                }
+            ],
+            "matrizSugerida": {
+                "cursoSugerido": "Engenharia Civil",
+                "instituicao": "AFYA - Vila Velha",
+                "totalAproveitamento": 45,
+                "observacoes": "Baixa compatibilidade curricular. Necessita revisão manual e possível complementação.",
+                "aproveitamentoDisciplinas": [
+                    {
+                        "origem": "Administração Geral",
+                        "destino": "Gestão de Projetos",
+                        "aproveitamento": "parcial",
+                        "compatibilidade": 60,
+                        "observacoes": "Aproveitamento parcial - conteúdo similar mas foco diferente"
+                    }
+                ]
+            }
+        }
+    ]
+    
+    # Aplicar filtros
+    analises_filtradas = analises
+    
+    if filtro_estudante:
+        analises_filtradas = [a for a in analises_filtradas 
+                             if filtro_estudante.lower() in a["estudante"]["nome"].lower() 
+                             or filtro_estudante in a["estudante"]["idps"]]
+    
+    if filtro_status:
+        analises_filtradas = [a for a in analises_filtradas 
+                             if a["analise"]["status"] == filtro_status]
+    
+    if filtro_curso:
+        analises_filtradas = [a for a in analises_filtradas 
+                             if filtro_curso.lower() in a["contexto"]["curso"].lower()]
+    
+    if filtro_coligada:
+        analises_filtradas = [a for a in analises_filtradas 
+                             if filtro_coligada.lower() in a["contexto"]["coligada"].lower()]
+    
+    # Formatar resultado
+    resultado = f"📊 **Dataset de Análises dos Alunos**\n\n"
+    resultado += f"🔍 **Filtros aplicados:**\n"
+    resultado += f"- Estudante: {filtro_estudante or 'Todos'}\n"
+    resultado += f"- Status: {filtro_status or 'Todos'}\n"
+    resultado += f"- Curso: {filtro_curso or 'Todos'}\n"
+    resultado += f"- Coligada: {filtro_coligada or 'Todas'}\n\n"
+    
+    resultado += f"📈 **Total de análises encontradas:** {len(analises_filtradas)}\n\n"
+    
+    for analise in analises_filtradas:
+        resultado += f"🎓 **Análise #{analise['id']} - {analise['estudante']['nome']}**\n"
+        resultado += f"   📋 IDPS: {analise['estudante']['idps']}\n"
+        resultado += f"   🏫 Instituição Anterior: {analise['academico']['instituicaoAnterior']}\n"
+        resultado += f"   📚 Curso Anterior: {analise['academico']['cursoAnterior']}\n"
+        resultado += f"   🎯 Curso Destino: {analise['contexto']['curso']}\n"
+        resultado += f"   📊 Status: {analise['analise']['status'].upper()}\n"
+        resultado += f"   🧠 Percentual Aproveitamento: {analise['analise']['percentualAproveitamento']}%\n"
+        resultado += f"   🤖 Agente IA: {analise['analise']['agenteIA']}\n"
+        resultado += f"   📝 Observações: {analise['analise']['observacoes']}\n"
+        
+        if incluir_documentos and analise['documentos']:
+            resultado += f"\n   📄 **Documentos Analisados:**\n"
+            for doc in analise['documentos']:
+                resultado += f"      - {doc['nome']} ({doc['tipo']}) - {doc['statusIA']}\n"
+                resultado += f"        Recomendação: {doc['recomendacao']}\n"
+                resultado += f"        TOTVS: {doc['integracaoTOTVS']['status']}\n"
+        
+        if incluir_disciplinas and analise['disciplinas']:
+            resultado += f"\n   📚 **Disciplinas do Histórico:**\n"
+            for disc in analise['disciplinas']:
+                resultado += f"      - {disc['codigo']}: {disc['nome']} ({disc['cargaHoraria']}h, {disc['creditos']} créditos)\n"
+                resultado += f"        Semestre: {disc['semestre']}º, Nota: {disc['nota']}, Status: {disc['status']}\n"
+        
+        if incluir_matriz_sugerida and analise['matrizSugerida']:
+            resultado += f"\n   🎯 **Matriz Curricular Sugerida:**\n"
+            resultado += f"      Curso: {analise['matrizSugerida']['cursoSugerido']}\n"
+            resultado += f"      Instituição: {analise['matrizSugerida']['instituicao']}\n"
+            resultado += f"      Total Aproveitamento: {analise['matrizSugerida']['totalAproveitamento']}%\n"
+            resultado += f"      Observações: {analise['matrizSugerida']['observacoes']}\n"
+            
+            if analise['matrizSugerida']['aproveitamentoDisciplinas']:
+                resultado += f"\n      📋 **Disciplinas Aproveitadas:**\n"
+                for ap in analise['matrizSugerida']['aproveitamentoDisciplinas']:
+                    resultado += f"         - {ap['origem']} → {ap['destino']} ({ap['aproveitamento']}, {ap['compatibilidade']}%)\n"
+                    resultado += f"           {ap['observacoes']}\n"
+        
+        resultado += "\n" + "─" * 80 + "\n\n"
+    
+    return resultado
+
+# Ferramentas disponíveis para os agentes
+tools = [
+    Function(
+        name="web_search",
+        description="Busca informações atualizadas na internet sobre um tópico específico",
+        func=web_search
+    ),
+    Function(
+        name="consultar_analises_alunos",
+        description="Consulta o dataset completo de análises dos alunos, incluindo histórico acadêmico, documentos analisados, feedback da IA e status de integração TOTVS. Útil para entender o contexto completo de um estudante ou análise específica.",
+        func=consultar_analises_alunos
+    )
+]
+
 # Agentes Agno existentes (mantidos para compatibilidade)
 Coordenador = Agent(
-    name="Coordenador de Aproveitamento de Estudos",
+    name="Coordenador",
+    description="Agente especializado em coordenação acadêmica e análise de documentos",
+    instructions="""Você é um coordenador acadêmico especializado em análise de documentos e coordenação de cursos. 
+    Sua função é auxiliar na análise de documentos acadêmicos, histórico escolar, ementas e outros documentos relacionados a transferências e aproveitamento de disciplinas.
+    
+    Você tem acesso a um dataset completo de análises dos alunos que inclui:
+    - Informações dos estudantes (nome, IDPS, CPF, contato)
+    - Dados acadêmicos (instituição anterior, curso, créditos, CR)
+    - Análises realizadas pela IA (status, percentual de aproveitamento, observações)
+    - Documentos analisados com feedback da IA
+    - Disciplinas do histórico com detalhes completos
+    - Matriz curricular sugerida pela IA
+    - Status de integração com TOTVS
+    
+    Use a ferramenta 'consultar_analises_alunos' para acessar esses dados quando necessário.
+    
+    Seja sempre profissional, preciso e útil nas suas respostas.""",
+    tools=tools,
     model=OpenAIChat(
-        id="gpt-4.1-mini",
+        id="gpt-4o-mini",
         api_key=os.getenv("OPENAI_API_KEY")
-    ),
-    tools=[],
-    instructions=[
-        "Você é um Coordenador de Curso de Graduação especializado em validar disciplinas para aproveitamento de estudos.",
-        "Sua função é analisar documentos acadêmicos de alunos e determinar equivalências entre disciplinas.",
-        "Ao receber documentos, você deve:",
-        "1. Analisar o conteúdo programático das disciplinas apresentadas",
-        "2. Comparar com as disciplinas da matriz curricular do curso",
-        "3. Calcular o percentual de equivalência/aproveitamento",
-        "4. Indicar quais disciplinas podem ser aproveitadas e o percentual de compatibilidade",
-        "5. Justificar suas decisões com base no conteúdo programático e carga horária",
-        "Sempre forneça respostas detalhadas e fundamentadas academicamente.",
-        "Use sua experiência em coordenação acadêmica para avaliar a qualidade e relevância do conteúdo."
-    ],
-    # Store the agent sessions in a sqlite database
-    storage=SqliteStorage(table_name="coordenador_aproveitamento", db_file=agent_storage),
-    # Adds the current date and time to the instructions
-    add_datetime_to_instructions=True,
-    # Adds the history of the conversation to the messages
-    add_history_to_messages=True,
-    # Number of history responses to add to the messages
-    num_history_responses=5,
-    # Adds markdown formatting to the messages
-    markdown=True,
+    )
 )
 
-# Agent especializado em Transferência Externa e Portador de Diploma
-TransferenciaExterna = Agent(
-    name="Especialista em Transferência Externa e Portador de Diploma",
+Analisador = Agent(
+    name="Analisador",
+    description="Agente especializado em análise de documentos acadêmicos",
+    instructions="""Você é um analisador especializado em documentos acadêmicos como histórico escolar, ementas e outros documentos relacionados a transferências.
+    
+    Sua função é analisar e interpretar documentos acadêmicos para determinar compatibilidade curricular e sugerir aproveitamento de disciplinas.
+    
+    Você tem acesso a um dataset completo de análises dos alunos que inclui:
+    - Histórico completo de análises realizadas
+    - Feedback detalhado da IA sobre cada documento
+    - Comparação de disciplinas e matrizes curriculares
+    - Status de integração com sistemas TOTVS
+    
+    Use a ferramenta 'consultar_analises_alunos' para acessar o histórico de análises e entender padrões de aproveitamento.
+    
+    Seja sempre técnico, preciso e baseado nos dados disponíveis.""",
+    tools=tools,
     model=OpenAIChat(
-        id="gpt-4.1-mini",
+        id="gpt-4o-mini",
         api_key=os.getenv("OPENAI_API_KEY")
-    ),
-    tools=[],
-    instructions=[
-        "Você é um especialista em processos de Transferência Externa e Portador de Diploma.",
-        "Sua especialidade é analisar históricos acadêmicos de outras instituições de ensino superior.",
-        "Para cada análise você deve:",
-        "1. Verificar a autenticidade e validade dos documentos apresentados",
-        "2. Analisar o histórico escolar completo do estudante",
-        "3. Identificar disciplinas cursadas com aprovação (nota ≥ 6.0 ou conceito equivalente)",
-        "4. Comparar ementa e carga horária com as disciplinas da matriz curricular atual",
-        "5. Calcular percentual de equivalência por disciplina (0-100%)",
-        "6. Sugerir aproveitamento total, parcial ou não aproveitamento",
-        "7. Para Portador de Diploma: verificar se o curso é relacionado à área",
-        "Critérios de aproveitamento:",
-        "- Conteúdo programático compatível ≥ 75% = Aproveitamento total",
-        "- Conteúdo programático compatível 50-74% = Aproveitamento parcial (complementação necessária)",
-        "- Conteúdo programático compatível < 50% = Não aproveitamento",
-        "- Carga horária mínima: 75% da disciplina equivalente",
-        "Sempre apresente resultado em formato de relatório acadêmico detalhado."
-    ],
-    storage=SqliteStorage(table_name="transferencia_externa", db_file=agent_storage),
-    add_datetime_to_instructions=True,
-    add_history_to_messages=True,
-    num_history_responses=5,
-    markdown=True,
+    )
+)
+
+Especialista = Agent(
+    name="Especialista",
+    description="Agente especialista em regras acadêmicas e procedimentos",
+    instructions="""Você é um especialista em regras acadêmicas, procedimentos de transferência e aproveitamento de disciplinas.
+    
+    Sua função é orientar sobre procedimentos acadêmicos, regras de aproveitamento e integração com sistemas TOTVS.
+    
+    Você tem acesso a um dataset completo de análises dos alunos que inclui:
+    - Casos de sucesso e rejeição
+    - Padrões de aproveitamento por curso
+    - Status de integração com TOTVS
+    - Observações e feedback da IA
+    
+    Use a ferramenta 'consultar_analises_alunos' para entender casos similares e padrões estabelecidos.
+    
+    Seja sempre informativo, baseado em evidências e orientado a procedimentos.""",
+    tools=tools,
+    model=OpenAIChat(
+        id="gpt-4o-mini",
+        api_key=os.getenv("OPENAI_API_KEY")
+    )
 )
 
 # Aplicação do playground Agno
-playground_app = Playground(agents=[Coordenador, TransferenciaExterna])
+playground_app = Playground(agents=[Coordenador, Analisador, Especialista])
 playground_router = playground_app.get_app()
 
 # Montar as aplicações

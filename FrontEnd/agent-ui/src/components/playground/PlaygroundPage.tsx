@@ -213,6 +213,14 @@ ${inputMessage.toLowerCase().includes('documento') ?
     }
   }
 
+  const handleAgentSelect = (agent: Agent) => {
+    setSelectedAgent(agent)
+    // Resetar mensagens e análise quando um novo agente é selecionado
+    setMessages([])
+    setCurrentAnalysis(null)
+    setUploadedDocuments([])
+  }
+
   if (!selectedAgent) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -259,39 +267,63 @@ ${inputMessage.toLowerCase().includes('documento') ?
 
         {/* Seleção de Agente */}
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-[#232323] mb-4">
-              Escolha seu Agente de IA
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-[#232323] mb-4">
+              🤖 Playground de Agentes IA
             </h1>
-            <p className="text-lg text-[#8E9794] max-w-2xl mx-auto">
-              Selecione um agente especializado para começar a análise inteligente de documentos acadêmicos
+            <p className="text-lg text-[#8E9794] max-w-3xl mx-auto">
+              Interaja com nossos agentes especializados em análise acadêmica. 
+              Eles têm acesso ao dataset completo de análises dos alunos e podem consultar 
+              histórico acadêmico, feedback da IA e status de integração TOTVS.
             </p>
+          </div>
+
+          {/* Informações sobre ferramentas disponíveis */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+            <h2 className="text-xl font-semibold text-[#232323] mb-4 flex items-center gap-2">
+              🛠️ Ferramentas Disponíveis
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <h3 className="font-medium text-[#232323] mb-2">📊 Consulta ao Dataset</h3>
+                <p className="text-[#8E9794]">
+                  Os agentes podem consultar o dataset completo de análises dos alunos, incluindo:
+                  histórico acadêmico, documentos analisados, feedback da IA e status TOTVS.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-medium text-[#232323] mb-2">🔍 Busca na Web</h3>
+                <p className="text-[#8E9794]">
+                  Acesso a informações atualizadas na internet para complementar análises
+                  e fornecer contexto adicional sobre instituições e cursos.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {AGENTS.map((agent) => (
-              <div 
-                key={agent.id}
-                className={`bg-gradient-to-br ${agent.color} rounded-xl p-8 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer`}
-                onClick={() => setSelectedAgent(agent)}
-              >
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+              <div key={agent.id} className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="text-center">
+                  <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl`}
+                       style={{ backgroundColor: agent.color }}>
                     {agent.icon}
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-bold">{agent.name}</h3>
-                    <p className="text-white/80 text-sm">{agent.model}</p>
+                  <h3 className="text-lg font-semibold text-[#232323] mb-2">{agent.name}</h3>
+                  <p className="text-sm text-[#8E9794] mb-4">{agent.description}</p>
+                  <div className="text-xs text-[#8E9794] mb-4 space-y-1">
+                    <p><strong>Modelo:</strong> {agent.model}</p>
+                    <p><strong>Ferramentas:</strong> Dataset de Análises + Web Search</p>
+                    <p><strong>Especialidade:</strong> {agent.name === 'Coordenador' ? 'Coordenação Acadêmica' : 
+                                                        agent.name === 'Analisador' ? 'Análise de Documentos' : 
+                                                        'Regras e Procedimentos'}</p>
                   </div>
-                </div>
-                
-                <p className="text-white/90 mb-6 leading-relaxed">
-                  {agent.description}
-                </p>
-                
-                <div className="flex items-center gap-2 text-white/80">
-                  <MessageSquare className="w-4 h-4" />
-                  <span className="text-sm">Clique para conversar</span>
+                  <button
+                    onClick={() => handleAgentSelect(agent)}
+                    className="w-full bg-[#CE0058] text-white px-4 py-2 rounded-lg hover:bg-[#B91C5C] transition-colors"
+                  >
+                    Selecionar Agente
+                  </button>
                 </div>
               </div>
             ))}

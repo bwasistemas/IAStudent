@@ -19,7 +19,7 @@ class AgentsDatabase:
             # Criar tabela de agentes se não existir
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS agents (
-                    id TEXT PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
                     description TEXT NOT NULL,
                     icon TEXT NOT NULL,
@@ -38,102 +38,129 @@ class AgentsDatabase:
             cursor.execute('SELECT COUNT(*) FROM agents')
             count = cursor.fetchone()[0]
             
+            # Inserir agentes padrão se a tabela estiver vazia
             if count == 0:
-                # Inserir agentes padrão
-                self._insert_default_agents(cursor)
+                default_agents = [
+                    {
+                        'name': 'Coordenador',
+                        'description': 'Agente especializado em coordenação acadêmica e análise de documentos',
+                        'icon': '👨‍🏫',
+                        'color': '#CE0058',
+                        'model': 'gpt-4o-mini',
+                        'isActive': True,
+                        'instructions': """Você é um coordenador acadêmico especializado em análise de documentos e coordenação de cursos. 
+Sua função é auxiliar na análise de documentos acadêmicos, histórico escolar, ementas e outros documentos relacionados a transferências e aproveitamento de disciplinas.
+
+Você tem acesso a um dataset completo de análises dos alunos que inclui:
+- Informações dos estudantes (nome, IDPS, CPF, contato)
+- Dados acadêmicos (instituição anterior, curso, créditos, CR)
+- Análises realizadas pela IA (status, percentual de aproveitamento, observações)
+- Documentos analisados com feedback da IA
+- Disciplinas do histórico com detalhes completos
+- Matriz curricular sugerida pela IA
+- Status de integração com TOTVS
+
+Use a ferramenta 'consultar_analises_alunos' para acessar esses dados quando necessário.
+
+Seja sempre profissional, preciso e útil nas suas respostas.""",
+                        'knowledgeBase': json.dumps({
+                            'enabled': True,
+                            'type': 'rag',
+                            'endpoint': 'http://localhost:7777/api/analises',
+                            'collection': 'analises_alunos'
+                        }),
+                        'parameters': json.dumps({
+                            'temperature': 0.7,
+                            'maxTokens': 2000,
+                            'topP': 0.9,
+                            'frequencyPenalty': 0.1,
+                            'presencePenalty': 0.1
+                        })
+                    },
+                    {
+                        'name': 'Analisador',
+                        'description': 'Agente especializado em análise de documentos acadêmicos',
+                        'icon': '🔍',
+                        'color': '#8E9794',
+                        'model': 'gpt-4o-mini',
+                        'isActive': True,
+                        'instructions': """Você é um analisador especializado em documentos acadêmicos como histórico escolar, ementas e outros documentos relacionados a transferências.
+
+Sua função é analisar e interpretar documentos acadêmicos para determinar compatibilidade curricular e sugerir aproveitamento de disciplinas.
+
+Você tem acesso a um dataset completo de análises dos alunos que inclui:
+- Histórico completo de análises realizadas
+- Feedback detalhado da IA sobre cada documento
+- Comparação de disciplinas e matrizes curriculares
+- Status de integração com sistemas TOTVS
+
+Use a ferramenta 'consultar_analises_alunos' para acessar o histórico de análises e entender padrões de aproveitamento.
+
+Seja sempre técnico, preciso e baseado nos dados disponíveis.""",
+                        'knowledgeBase': json.dumps({
+                            'enabled': True,
+                            'type': 'rag',
+                            'endpoint': 'http://localhost:7777/api/analises',
+                            'collection': 'analises_alunos'
+                        }),
+                        'parameters': json.dumps({
+                            'temperature': 0.5,
+                            'maxTokens': 2500,
+                            'topP': 0.8,
+                            'frequencyPenalty': 0.2,
+                            'presencePenalty': 0.1
+                        })
+                    },
+                    {
+                        'name': 'Especialista',
+                        'description': 'Agente especialista em regras acadêmicas e procedimentos',
+                        'icon': '🎓',
+                        'color': '#232323',
+                        'model': 'gpt-4o-mini',
+                        'isActive': True,
+                        'instructions': """Você é um especialista em regras acadêmicas, procedimentos de transferência e aproveitamento de disciplinas.
+
+Sua função é orientar sobre procedimentos acadêmicos, regras de aproveitamento e integração com sistemas TOTVS.
+
+Você tem acesso a um dataset completo de análises dos alunos que inclui:
+- Casos de sucesso e rejeição
+- Padrões de aproveitamento por curso
+- Status de integração com TOTVS
+- Observações e feedback da IA
+
+Use a ferramenta 'consultar_analises_alunos' para entender casos similares e padrões estabelecidos.
+
+Seja sempre informativo, baseado em evidências e orientado a procedimentos.""",
+                        'knowledgeBase': json.dumps({
+                            'enabled': True,
+                            'type': 'rag',
+                            'endpoint': 'http://localhost:7777/api/analises',
+                            'collection': 'analises_alunos'
+                        }),
+                        'parameters': json.dumps({
+                            'temperature': 0.6,
+                            'maxTokens': 2000,
+                            'topP': 0.9,
+                            'frequencyPenalty': 0.1,
+                            'presencePenalty': 0.2
+                        })
+                    }
+                ]
+                
+                for agent in default_agents:
+                    cursor.execute('''
+                        INSERT INTO agents (
+                            name, description, icon, color, model, instructions,
+                            knowledge_base, parameters, is_active, created_at, updated_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                        agent['name'], agent['description'], agent['icon'],
+                        agent['color'], agent['model'], agent['instructions'],
+                        agent['knowledgeBase'], agent['parameters'], agent['isActive'],
+                        datetime.now().isoformat(), datetime.now().isoformat()
+                    ))
             
             conn.commit()
-    
-    def _insert_default_agents(self, cursor):
-        """Insere os agentes padrão no banco"""
-        default_agents = [
-            {
-                'id': '1',
-                'name': 'Coordenador de Aproveitamento',
-                'description': 'Especialista em validação de disciplinas e cálculo de equivalências',
-                'icon': 'brain',
-                'color': 'from-[#CE0058] to-[#B91C5C]',
-                'model': 'gpt-4.1-mini',
-                'instructions': '''Você é um Coordenador de Curso de Graduação especializado em validar disciplinas para aproveitamento de estudos.
-
-Sua função é analisar documentos acadêmicos de alunos e determinar equivalências entre disciplinas.
-
-Ao receber documentos, você deve:
-1. Analisar o conteúdo programático das disciplinas apresentadas
-2. Comparar com as disciplinas da matriz curricular do curso
-3. Calcular o percentual de equivalência/aproveitamento
-4. Indicar quais disciplinas podem ser aproveitadas e o percentual de compatibilidade
-5. Justificar suas decisões com base no conteúdo programático e carga horária
-
-IMPORTANTE: Sempre consulte a Base de Conhecimento disponível para obter informações atualizadas sobre matrizes curriculares, ementas e disciplinas antes de fazer suas análises.''',
-                'knowledge_base': json.dumps({
-                    'enabled': True,
-                    'type': 'rag',
-                    'endpoint': 'http://localhost:8000',
-                    'collection': 'documents'
-                }),
-                'parameters': json.dumps({
-                    'temperature': 0.7,
-                    'maxTokens': 1000,
-                    'topP': 0.9,
-                    'frequencyPenalty': 0.5,
-                    'presencePenalty': 0.5
-                }),
-                'is_active': True,
-                'created_at': '2024-01-01T00:00:00Z',
-                'updated_at': '2024-01-15T00:00:00Z'
-            },
-            {
-                'id': '2',
-                'name': 'Especialista em Transferência',
-                'description': 'Transferência Externa e Portador de Diploma',
-                'icon': 'graduation-cap',
-                'color': 'from-[#232323] to-[#475569]',
-                'model': 'gpt-4.1-mini',
-                'instructions': '''Você é um especialista em processos de Transferência Externa e Portador de Diploma.
-
-Sua especialidade é analisar históricos acadêmicos de outras instituições de ensino superior.
-
-Para cada análise você deve:
-1. Verificar a autenticidade e validade dos documentos apresentados
-2. Analisar o histórico escolar completo do estudante
-3. Identificar disciplinas cursadas com aprovação (nota ≥ 6.0 ou conceito equivalente)
-4. Comparar ementa e carga horária com as disciplinas da matriz curricular atual
-5. Calcular percentual de equivalência por disciplina (0-100%)
-6. Sugerir aproveitamento total, parcial ou não aproveitamento
-
-IMPORTANTE: Sempre consulte a Base de Conhecimento disponível para obter informações atualizadas sobre matrizes curriculares, ementas e disciplinas antes de fazer suas análises.''',
-                'knowledge_base': json.dumps({
-                    'enabled': True,
-                    'type': 'rag',
-                    'endpoint': 'http://localhost:8000',
-                    'collection': 'documents'
-                }),
-                'parameters': json.dumps({
-                    'temperature': 0.7,
-                    'maxTokens': 1000,
-                    'topP': 0.9,
-                    'frequencyPenalty': 0.5,
-                    'presencePenalty': 0.5
-                }),
-                'is_active': True,
-                'created_at': '2024-01-01T00:00:00Z',
-                'updated_at': '2024-01-15T00:00:00Z'
-            }
-        ]
-        
-        for agent in default_agents:
-            cursor.execute('''
-                INSERT INTO agents (
-                    id, name, description, icon, color, model, instructions,
-                    knowledge_base, parameters, is_active, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                agent['id'], agent['name'], agent['description'], agent['icon'],
-                agent['color'], agent['model'], agent['instructions'],
-                agent['knowledge_base'], agent['parameters'], agent['is_active'],
-                agent['created_at'], agent['updated_at']
-            ))
     
     def get_all_agents(self) -> List[dict]:
         """Retorna todos os agentes"""
@@ -144,7 +171,7 @@ IMPORTANTE: Sempre consulte a Base de Conhecimento disponível para obter inform
             agents = []
             for row in cursor.fetchall():
                 agents.append({
-                    'id': row[0],
+                    'id': str(row[0]),
                     'name': row[1],
                     'description': row[2],
                     'icon': row[3],
@@ -247,9 +274,11 @@ IMPORTANTE: Sempre consulte a Base de Conhecimento disponível para obter inform
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute('DELETE FROM agents')
-                self._insert_default_agents(cursor)
                 conn.commit()
-                return True
+            
+            # Recriar o banco com os agentes padrão
+            self.init_database()
+            return True
         except Exception as e:
             print(f"Erro ao resetar agentes: {e}")
             return False

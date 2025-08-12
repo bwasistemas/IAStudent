@@ -26,7 +26,8 @@ import {
   Download,
   Eye,
   RefreshCw,
-  User
+  User,
+  Settings
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -1421,98 +1422,137 @@ export default function HomePage() {
         </div>
 
         {/* Funcionalidades principais */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          {QUICK_ACTIONS.map((action, index) => (
-            <QuickActionCard key={index} action={action} />
-          ))}
-        </div>
+        {/* Removido: menus de transferência e portador de diploma */}
 
-        {/* Agentes de IA */}
+        {/* Seção dos Agentes de IA */}
         <div className="mb-12">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-[#232323] mb-4">
-              Agentes de IA Especializados
+              🤖 Agentes de Inteligência Artificial
             </h2>
             <p className="text-lg text-[#8E9794] max-w-3xl mx-auto">
-              Interaja diretamente com nossos agentes inteligentes para análise detalhada de documentos acadêmicos
+              Nossos agentes especializados utilizam IA avançada para análise acadêmica, 
+              aproveitamento de disciplinas e coordenação curricular. Cada agente possui 
+              acesso ao dataset completo de análises e ferramentas especializadas.
             </p>
           </div>
-          
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Brain className="w-8 h-8 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-[#8E9794] mb-2">Carregando agentes...</h3>
-              <p className="text-sm text-[#8E9794]">Aguarde enquanto os agentes são carregados.</p>
-            </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-8 h-8 text-red-500" />
-              </div>
-              <h3 className="text-lg font-medium text-[#8E9794] mb-2">Erro ao carregar agentes</h3>
-              <p className="text-sm text-[#8E9794]">Não foi possível carregar os agentes de IA. Tente novamente mais tarde.</p>
-            </div>
-          ) : agents.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {agents.map((agent) => (
-                <div key={agent.id} className={`bg-gradient-to-br ${agent.color} rounded-xl p-8 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]`}>
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                      {agent.icon === 'brain' && <Brain className="w-8 h-8 text-white" />}
-                      {agent.icon === 'graduation-cap' && <GraduationCap className="w-8 h-8 text-white" />}
-                      {agent.icon === 'users' && <Users className="w-8 h-8 text-white" />}
-                      {agent.icon === 'shield' && <Zap className="w-8 h-8 text-white" />}
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold">{agent.name}</h3>
-                      <p className="text-white/80 text-sm">{agent.description}</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {loading ? (
+              // Loading state
+              Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 border border-gray-200 shadow-sm animate-pulse">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-16 h-16 bg-gray-200 rounded-2xl" />
+                    <div className="flex-1">
+                      <div className="h-6 bg-gray-200 rounded mb-2" />
+                      <div className="h-4 bg-gray-200 rounded w-20" />
                     </div>
                   </div>
-                  
-                  <p className="text-white/90 mb-6 leading-relaxed">
-                    {agent.instructions[0]}
-                  </p>
-                  
-                  <div className="flex items-center gap-4">
-                    <Link 
-                      href="/playground"
-                      className="bg-white text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2"
-                    >
-                      <MessageSquare className="w-5 h-5" />
-                      Conversar com o Agente
-                    </Link>
-                    <div className="flex items-center gap-2 text-white/80">
-                      <Zap className="w-4 h-4" />
-                      <span className="text-sm">{agent.model}</span>
+                  <div className="space-y-2 mb-6">
+                    <div className="h-4 bg-gray-200 rounded" />
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  </div>
+                  <div className="h-12 bg-gray-200 rounded-xl" />
+                </div>
+              ))
+            ) : error ? (
+              // Error state
+              <div className="col-span-full text-center py-12">
+                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-10 h-10 text-red-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-[#232323] mb-2">Erro ao carregar agentes</h3>
+                <p className="text-[#8E9794] mb-4">Não foi possível carregar os agentes de IA. Tente novamente mais tarde.</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="bg-[#CE0058] text-white px-6 py-2 rounded-lg hover:bg-[#B91C5C] transition-colors"
+                >
+                  Tentar Novamente
+                </button>
+              </div>
+            ) : agents.length > 0 ? (
+              // Agents grid
+              agents.map((agent) => (
+                <div key={agent.id} className="group relative">
+                  <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer overflow-hidden">
+                    {/* Background decorativo */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    {/* Header do agente */}
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg`}
+                             style={{ backgroundColor: agent.color }}>
+                          {agent.icon}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-[#232323] mb-1">{agent.name}</h3>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                            <span className="text-sm text-green-600 font-medium">Ativo</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <p className="text-[#8E9794] mb-4 leading-relaxed">{agent.description}</p>
+                      
+                      {/* Especificações técnicas */}
+                      <div className="space-y-2 mb-6">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-[#8E9794]">Modelo:</span>
+                          <span className="font-mono text-[#232323] bg-gray-100 px-2 py-1 rounded">{agent.model}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-[#8E9794]">Ferramentas:</span>
+                          <span className="text-[#232323] font-medium">Dataset + Web Search</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-[#8E9794]">Status:</span>
+                          <span className="text-green-600 font-medium">✓ Operacional</span>
+                        </div>
+                      </div>
+                      
+                      {/* Botão de ação */}
+                      <button
+                        onClick={() => router.push(`/playground?agent=${agent.id}`)}
+                        className="w-full bg-gradient-to-r from-[#CE0058] to-[#B91C5C] text-white px-6 py-3 rounded-xl font-semibold hover:from-[#B91C5C] hover:to-[#CE0058] transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                      >
+                        Iniciar Conversa
+                      </button>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Brain className="w-8 h-8 text-gray-400" />
+              ))
+            ) : (
+              // Empty state
+              <div className="col-span-full text-center py-12">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Brain className="w-10 h-10 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-[#232323] mb-2">Nenhum agente configurado</h3>
+                <p className="text-[#8E9794] mb-4">Entre em contato com o administrador para configurar os agentes de IA.</p>
+                <Link
+                  href="/configuracoes"
+                  className="inline-flex items-center gap-2 bg-[#CE0058] text-white px-6 py-2 rounded-lg hover:bg-[#B91C5C] transition-colors"
+                >
+                  <Settings className="w-4 h-4" />
+                  Configurar Agentes
+                </Link>
               </div>
-              <h3 className="text-lg font-medium text-[#8E9794] mb-2">Nenhum agente configurado</h3>
-              <p className="text-sm text-[#8E9794]">Entre em contato com o administrador para configurar os agentes de IA.</p>
-            </div>
-          )}
-
-          {/* Botão para acessar o playground completo */}
+            )}
+          </div>
+          
+          {/* Call to action */}
           <div className="text-center mt-8">
-            <Link 
-              href="/playground"
-              className="inline-flex items-center gap-3 bg-[#8E9794] text-white px-8 py-4 rounded-xl font-semibold hover:bg-[#64748B] transition-colors text-lg"
-            >
-              <MessageSquare className="w-6 h-6" />
-              Acessar Playground Completo dos Agentes
-            </Link>
-            <p className="text-sm text-[#8E9794] mt-3">
-              Interface avançada para interação completa com todos os agentes
+            <p className="text-[#8E9794] mb-4">
+              Precisa de um agente personalizado? Entre em contato com o administrador.
             </p>
+            <div className="flex items-center justify-center gap-2 text-sm text-[#8E9794]">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+              <span>Sistema de IA em tempo real</span>
+              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
+            </div>
           </div>
         </div>
 
@@ -1783,3 +1823,4 @@ export default function HomePage() {
     </div>
   )
 }
+
