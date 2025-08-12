@@ -17,11 +17,8 @@ import {
   TrendingUp,
   Users,
   Calendar,
-  Search,
-  Filter,
   MessageSquare,
   Brain,
-  Zap,
   Database,
   Download,
   Eye,
@@ -134,13 +131,6 @@ interface Statistic {
   color: string
 }
 
-interface QuickAction {
-  title: string
-  description: string
-  icon: React.ReactNode
-  buttonText: string
-  href: string
-}
 
 // Dados mock
 const MOCK_ANALYSES: Analysis[] = [
@@ -634,29 +624,6 @@ const MOCK_STATISTICS: Statistic[] = [
   }
 ]
 
-const QUICK_ACTIONS: QuickAction[] = [
-  {
-    title: 'Transferência Externa',
-    description: 'Analise documentos de estudantes transferidos de outras instituições',
-    icon: <FileText className="w-8 h-8 text-[#CE0058]" />,
-    buttonText: 'Iniciar Análise',
-    href: '/analise/transferencia'
-  },
-  {
-    title: 'Portador de Diploma',
-    description: 'Avalie candidatos portadores de diploma para aproveitamento',
-    icon: <GraduationCap className="w-8 h-8 text-[#CE0058]" />,
-    buttonText: 'Iniciar Análise',
-    href: '/analise/portador'
-  },
-  {
-    title: 'Relatórios e Analytics',
-    description: 'Visualize estatísticas e relatórios detalhados',
-    icon: <BarChart3 className="w-8 h-8 text-[#CE0058]" />,
-    buttonText: 'Ver Relatórios',
-    href: '/relatorios'
-  }
-]
 
 // Componente de status badge
 const StatusBadge = ({ status }: { status: Analysis['status'] }) => {
@@ -690,23 +657,6 @@ const StatCard = ({ stat }: { stat: Statistic }) => (
   </div>
 )
 
-// Componente de ação rápida
-const QuickActionCard = ({ action }: { action: QuickAction }) => (
-  <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
-    <div className="flex items-start gap-4">
-      <div className="flex-shrink-0">
-        {action.icon}
-      </div>
-      <div className="flex-1">
-        <h3 className="text-lg font-semibold text-[#232323] mb-2">{action.title}</h3>
-        <p className="text-sm text-[#8E9794] mb-4">{action.description}</p>
-        <button className="bg-[#CE0058] text-white px-4 py-2 rounded-lg hover:bg-[#B91C5C] transition-colors font-medium">
-          {action.buttonText}
-        </button>
-      </div>
-    </div>
-  </div>
-)
 
 // Componente de badge de documento
 const DocumentBadge = ({ document }: { document: Document }) => {
@@ -1427,8 +1377,11 @@ export default function HomePage() {
         {/* Seção dos Agentes de IA */}
         <div className="mb-12">
           <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
+              <Brain className="w-8 h-8 text-white" />
+            </div>
             <h2 className="text-3xl font-bold text-[#232323] mb-4">
-              🤖 Agentes de Inteligência Artificial
+              Agentes de Inteligência Artificial
             </h2>
             <p className="text-lg text-[#8E9794] max-w-3xl mx-auto">
               Nossos agentes especializados utilizam IA avançada para análise acadêmica, 
@@ -1437,7 +1390,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
             {loading ? (
               // Loading state
               Array.from({ length: 3 }).map((_, index) => (
@@ -1474,53 +1427,87 @@ export default function HomePage() {
             ) : agents.length > 0 ? (
               // Agents grid
               agents.map((agent) => (
-                <div key={agent.id} className="group relative">
-                  <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer overflow-hidden">
-                    {/* Background decorativo */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div key={agent.id} className="group h-full">
+                  <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-blue-300 cursor-pointer h-full flex flex-col relative overflow-hidden">
+                    {/* Subtle top accent */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500 opacity-20" />
                     
                     {/* Header do agente */}
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg`}
-                             style={{ backgroundColor: agent.color }}>
-                          {agent.icon}
+                    <div className="mb-5">
+                      <div className="flex items-center justify-center mb-4">
+                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg`}
+                             style={{ backgroundColor: agent.color || '#6B7280' }}>
+                          {(() => {
+                            // Mapeamento de ícones emoji para componentes React
+                            const iconMap: Record<string, React.ReactNode> = {
+                              '👨‍🏫': <User className="w-8 h-8 text-white" />,
+                              '🔍': <Eye className="w-8 h-8 text-white" />,
+                              '🎓': <GraduationCap className="w-8 h-8 text-white" />,
+                              'graduation-cap': <GraduationCap className="w-8 h-8 text-white" />,
+                            };
+                            
+                            if (agent.icon && iconMap[agent.icon]) {
+                              return iconMap[agent.icon];
+                            } else if (agent.icon && !agent.icon.startsWith('<')) {
+                              return <span className="text-3xl text-white">{agent.icon}</span>;
+                            } else {
+                              return <Brain className="w-8 h-8 text-white" />;
+                            }
+                          })()}
                         </div>
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-[#232323] mb-1">{agent.name}</h3>
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                            <span className="text-sm text-green-600 font-medium">Ativo</span>
+                      </div>
+                      <div className="text-center">
+                        <h3 className="text-xl font-bold text-[#232323] mb-2 leading-tight">{agent.name}</h3>
+                        <div className="inline-flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full">
+                          <div className="w-2 h-2 bg-green-500 rounded-full" />
+                          <span className="text-sm text-green-600 font-medium">Operacional</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex-grow">
+                      <p className="text-[#8E9794] mb-5 leading-relaxed text-sm text-center">{agent.description}</p>
+                    </div>
+                    
+                    {/* Especificações técnicas */}
+                    <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                      <h4 className="text-sm font-semibold text-[#232323] mb-3 text-center">Especificações</h4>
+                      
+                      <div className="space-y-3">
+                        <div className="text-center">
+                          <div className="text-xs text-[#8E9794] font-medium mb-1">Modelo</div>
+                          <div className="font-mono text-[#232323] bg-white px-3 py-2 rounded-lg text-xs border shadow-sm">
+                            {agent.model}
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3 text-center">
+                          <div>
+                            <div className="text-xs text-[#8E9794] font-medium mb-1">Ferramentas</div>
+                            <div className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-medium">
+                              Dataset + Web
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <div className="text-xs text-[#8E9794] font-medium mb-1">Status</div>
+                            <div className="bg-green-50 text-green-700 px-2 py-1 rounded text-xs font-medium flex items-center justify-center gap-1">
+                              <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                              Online
+                            </div>
                           </div>
                         </div>
                       </div>
-                      
-                      <p className="text-[#8E9794] mb-4 leading-relaxed">{agent.description}</p>
-                      
-                      {/* Especificações técnicas */}
-                      <div className="space-y-2 mb-6">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-[#8E9794]">Modelo:</span>
-                          <span className="font-mono text-[#232323] bg-gray-100 px-2 py-1 rounded">{agent.model}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-[#8E9794]">Ferramentas:</span>
-                          <span className="text-[#232323] font-medium">Dataset + Web Search</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-[#8E9794]">Status:</span>
-                          <span className="text-green-600 font-medium">✓ Operacional</span>
-                        </div>
-                      </div>
-                      
-                      {/* Botão de ação */}
-                      <button
-                        onClick={() => router.push(`/playground?agent=${agent.id}`)}
-                        className="w-full bg-gradient-to-r from-[#CE0058] to-[#B91C5C] text-white px-6 py-3 rounded-xl font-semibold hover:from-[#B91C5C] hover:to-[#CE0058] transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
-                      >
-                        Iniciar Conversa
-                      </button>
                     </div>
+                    
+                    {/* Botão de ação */}
+                    <button
+                      onClick={() => router.push(`/playground?agent=${agent.id}`)}
+                      className="w-full bg-gradient-to-r from-[#CE0058] to-[#B91C5C] text-white px-6 py-3 rounded-xl font-semibold hover:from-[#B91C5C] hover:to-[#CE0058] transition-all duration-300 text-sm shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
+                    >
+                      <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                      Iniciar Conversa
+                    </button>
                   </div>
                 </div>
               ))
@@ -1543,65 +1530,71 @@ export default function HomePage() {
             )}
           </div>
           
-          {/* Call to action */}
-          <div className="text-center mt-8">
-            <p className="text-[#8E9794] mb-4">
-              Precisa de um agente personalizado? Entre em contato com o administrador.
-            </p>
-            <div className="flex items-center justify-center gap-2 text-sm text-[#8E9794]">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-              <span>Sistema de IA em tempo real</span>
-              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
-            </div>
-          </div>
         </div>
 
         {/* Tabela de Análises Recentes */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-[#232323]">Análises Recentes</h3>
+          <div className="px-6 py-5 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <BarChart3 className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-[#232323]">Análises Recentes</h3>
+                <p className="text-sm text-[#8E9794]">Últimas análises de documentos acadêmicos</p>
+              </div>
+            </div>
           </div>
 
           {/* Filtros */}
-          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+          <div className="px-6 py-5 bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Busca por texto */}
               <div className="lg:col-span-2">
-                <label className="block text-sm font-medium text-[#8E9794] mb-2">Buscar</label>
-                <input
-                  type="text"
-                  placeholder="Nome, IDPS, curso..."
-                  value={buscaTexto}
-                  onChange={(e) => setBuscaTexto(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CE0058] focus:border-transparent"
-                />
+                <label className="text-sm font-medium text-[#232323] mb-2 block">
+                  Buscar
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Nome, IDPS, curso..."
+                    value={buscaTexto}
+                    onChange={(e) => setBuscaTexto(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#CE0058] focus:border-transparent transition-all shadow-sm"
+                  />
+                  <Eye className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                </div>
               </div>
 
               {/* Filtro por status */}
               <div>
-                <label className="block text-sm font-medium text-[#8E9794] mb-2">Status</label>
+                <label className="text-sm font-medium text-[#232323] mb-2 block">
+                  Status
+                </label>
                 <select
                   value={filtroStatus}
                   onChange={(e) => setFiltroStatus(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CE0058] focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#CE0058] focus:border-transparent transition-all shadow-sm bg-white"
                 >
                   <option value="todos">Todos</option>
-                  <option value="aprovado">Aprovado</option>
-                  <option value="rejeitado">Rejeitado</option>
-                  <option value="pendente">Pendente</option>
+                  <option value="aprovado">✅ Aprovado</option>
+                  <option value="rejeitado">❌ Rejeitado</option>
+                  <option value="pendente">⏳ Pendente</option>
                 </select>
               </div>
 
-              {/* Filtro por tipo */}
+              {/* Filtro por processo seletivo */}
               <div>
-                <label className="block text-sm font-medium text-[#8E9794] mb-2">Tipo</label>
+                <label className="text-sm font-medium text-[#232323] mb-2 block">
+                  Processo Seletivo
+                </label>
                 <select
                   value={filtroTipo}
                   onChange={(e) => setFiltroTipo(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CE0058] focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#CE0058] focus:border-transparent transition-all shadow-sm bg-white"
                 >
                   <option value="todos">Todos</option>
-                  <option value="transferencia">Transferência</option>
+                  <option value="transferencia">Transferência Externa</option>
                   <option value="portador">Portador de Diploma</option>
                 </select>
               </div>
@@ -1709,53 +1702,62 @@ export default function HomePage() {
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gradient-to-r from-gray-100 to-blue-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#8E9794] uppercase tracking-wider">Coligada</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#8E9794] uppercase tracking-wider">Filial</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#8E9794] uppercase tracking-wider">Nível</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#8E9794] uppercase tracking-wider">Estudante</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#8E9794] uppercase tracking-wider">Curso</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#8E9794] uppercase tracking-wider">IDPS</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#8E9794] uppercase tracking-wider">Processo Seletivo</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#8E9794] uppercase tracking-wider">Tipo</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#8E9794] uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#8E9794] uppercase tracking-wider">Documentos</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#8E9794] uppercase tracking-wider">Data</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#8E9794] uppercase tracking-wider">Coordenador</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#8E9794] uppercase tracking-wider">Ações</th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">Coligada</th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">Filial</th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">Nível</th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">👤 Estudante</th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">Curso</th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">IDPS</th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">Processo Seletivo</th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">Tipo</th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">✅ Status</th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">📂 Documentos</th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">Data</th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">Coordenador</th>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-[#232323]">Ações</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-100">
                 {analisesFiltradas.map((analysis) => (
-                  <tr key={analysis.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-[#8E9794]">{analysis.coligada}</span>
+                  <tr key={analysis.id} className="hover:bg-blue-50 transition-all duration-200 border-l-4 border-l-transparent hover:border-l-blue-400">
+                    <td className="px-4 py-4">
+                      <span className="text-sm font-medium text-[#232323] bg-gray-100 px-2 py-1 rounded">{analysis.coligada}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4">
                       <span className="text-sm text-[#8E9794]">{analysis.filial}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-[#8E9794]">{analysis.nivelEnsino}</span>
+                    <td className="px-4 py-4">
+                      <span className="text-sm text-[#8E9794] bg-blue-50 px-2 py-1 rounded">{analysis.nivelEnsino}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-[#232323]">{analysis.studentName}</div>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                          {analysis.studentName.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                        </div>
+                        <div className="text-sm font-semibold text-[#232323]">{analysis.studentName}</div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4">
                       <span className="text-sm text-[#8E9794]">{analysis.curso}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-[#8E9794] font-mono">{analysis.idps}</span>
+                    <td className="px-4 py-4">
+                      <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded border">{analysis.idps}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4">
                       <span className="text-sm text-[#8E9794]">{analysis.processoSeletivo}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-[#8E9794]">
-                        {analysis.type === 'transferencia' ? 'Transferência Externa' : 'Portador de Diploma'}
+                    <td className="px-4 py-4">
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                        analysis.type === 'transferencia' 
+                          ? 'bg-orange-100 text-orange-800' 
+                          : 'bg-purple-100 text-purple-800'
+                      }`}>
+                        {analysis.type === 'transferencia' ? 'Transferência' : 'Portador'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4">
                       <StatusBadge status={analysis.status} />
                     </td>
                     <td className="px-6 py-4">
