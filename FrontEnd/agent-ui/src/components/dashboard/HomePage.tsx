@@ -3,9 +3,9 @@
 import React, { useState, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAgents } from '@/contexts/AgentsContext'
+import { renderAgentIcon } from '@/utils/iconMapper'
 import { 
   FileText, 
-  GraduationCap, 
   BarChart3, 
   Bell, 
   LogOut, 
@@ -18,12 +18,21 @@ import {
   Users,
   Calendar,
   MessageSquare,
-  Brain,
   Database,
   Download,
-  Eye,
   RefreshCw,
+  Brain,
+  Eye,
+  GraduationCap,
   User,
+  Book,
+  BarChart,
+  Briefcase,
+  Target,
+  Wrench,
+  ClipboardCheck,
+  Lightbulb,
+  Building,
   Settings
 } from 'lucide-react'
 import Image from 'next/image'
@@ -1471,30 +1480,17 @@ export default function HomePage() {
                     {/* Header do agente */}
                     <div className="mb-5">
                       <div className="flex items-center justify-center mb-4">
-                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg ${
-                          agent.color?.includes('from-') || agent.color?.includes('to-') 
-                            ? `bg-gradient-to-r ${agent.color}` 
-                            : agent.color 
-                              ? `bg-[${agent.color}]` 
-                              : 'bg-gray-500'
-                        }`}>
-                          {(() => {
-                            // Mapeamento de ícones emoji para componentes React
-                            const iconMap: Record<string, React.ReactNode> = {
-                              '👨‍🏫': <User className="w-8 h-8 text-white" />,
-                              '🔍': <Eye className="w-8 h-8 text-white" />,
-                              '🎓': <GraduationCap className="w-8 h-8 text-white" />,
-                              'graduation-cap': <GraduationCap className="w-8 h-8 text-white" />,
-                            };
-                            
-                            if (agent.icon && iconMap[agent.icon]) {
-                              return iconMap[agent.icon];
-                            } else if (agent.icon && !agent.icon.startsWith('<')) {
-                              return <span className="text-3xl text-white">{agent.icon}</span>;
-                            } else {
-                              return <Brain className="w-8 h-8 text-white" />;
-                            }
-                          })()}
+                        <div 
+                          className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
+                          style={{
+                            backgroundColor: agent.color && agent.color.startsWith('#') 
+                              ? agent.color 
+                              : agent.color?.includes('from-') || agent.color?.includes('to-')
+                                ? undefined
+                                : '#6B7280'
+                          }}
+                        >
+                          {renderAgentIcon(agent.icon, agent.name)}
                         </div>
                       </div>
                       <div className="text-center">

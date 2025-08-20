@@ -40,10 +40,15 @@ interface Agent {
   instructions: string
   knowledgeBase: {
     enabled: boolean
-    type: 'rag' | 'vector' | 'database'
+    type: 'rag' | 'vector' | 'database' | 'dify'
     endpoint?: string
     collection?: string
     documents?: string[]
+    difyConfig?: {
+      apiKey: string
+      baseUrl: string
+      conversationId?: string
+    }
   }
   parameters: {
     temperature: number
@@ -211,6 +216,8 @@ export function ConfiguracoesPage() {
   const [editingTool, setEditingTool] = useState<APITool | null>(null)
   const [isCreatingTool, setIsCreatingTool] = useState(false)
   const [testingTool, setTestingTool] = useState<string | null>(null)
+  const [testingDify, setTestingDify] = useState(false)
+  const [difyTestResult, setDifyTestResult] = useState<{success: boolean, message: string} | null>(null)
 
   // Verificar se o usuário é administrador
   const isAdmin = user?.role === 'admin'
@@ -234,7 +241,12 @@ export function ConfiguracoesPage() {
         type: 'rag',
         endpoint: '',
         collection: '',
-        documents: []
+        documents: [],
+        difyConfig: {
+          apiKey: '',
+          baseUrl: '',
+          conversationId: ''
+        }
       },
       parameters: {
         temperature: 0.7,
@@ -258,7 +270,12 @@ export function ConfiguracoesPage() {
       type: 'rag' as const,
       endpoint: '',
       collection: '',
-      documents: []
+      documents: [],
+      difyConfig: {
+        apiKey: '',
+        baseUrl: '',
+        conversationId: ''
+      }
     }
     
     const defaultParameters = {
@@ -335,6 +352,54 @@ export function ConfiguracoesPage() {
       } catch (err) {
         console.error('Erro ao deletar agente:', err)
       }
+    }
+  }
+
+  const testDifyConnection = async (difyConfig: any) => {
+    if (!difyConfig?.apiKey || !difyConfig?.baseUrl) {
+      alert('Por favor, preencha a chave de API e URL base do DIFY')
+      return
+    }
+
+    setTestingDify(true)
+    setDifyTestResult(null)
+
+    try {
+      const response = await fetch(`${difyConfig.baseUrl}/chat-messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${difyConfig.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          inputs: {},
+          query: 'Teste de conexão',
+          response_mode: 'streaming',
+          conversation_id: difyConfig.conversationId || '',
+          user: 'test-user'
+        })
+      })
+
+      if (response.ok) {
+        // Para streaming, apenas verificamos se a conexão foi estabelecida
+        setDifyTestResult({
+          success: true,
+          message: 'Conexão com DIFY estabelecida com sucesso! API está respondendo.'
+        })
+      } else {
+        const errorText = await response.text()
+        setDifyTestResult({
+          success: false,
+          message: `Erro na conexão: ${response.status} - ${errorText}`
+        })
+      }
+    } catch (error) {
+      setDifyTestResult({
+        success: false,
+        message: `Erro na conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+      })
+    } finally {
+      setTestingDify(false)
     }
   }
 
@@ -709,7 +774,7 @@ export function ConfiguracoesPage() {
                               ...editingAgent,
                               knowledgeBase: {
                                 ...editingAgent.knowledgeBase,
-                                type: e.target.value as 'rag' | 'vector' | 'database'
+                                type: e.target.value as 'rag' | 'vector' | 'database' | 'dify'
                               }
                             })}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#CE0058] focus:border-transparent"
@@ -717,46 +782,181 @@ export function ConfiguracoesPage() {
                             <option value="rag">RAG (Retrieval-Augmented Generation)</option>
                             <option value="vector">Base Vetorial</option>
                             <option value="database">Base de Dados</option>
+                            <option value="dify">DIFY - Base de Conhecimento</option>
                           </select>
                         </div>
                         
-                        <div>
-                          <label className="block text-sm font-medium text-[#232323] mb-2">
-                            Endpoint da API
-                          </label>
-                          <input
-                            type="text"
-                            value={editingAgent.knowledgeBase.endpoint || ''}
-                            onChange={(e) => setEditingAgent({
-                              ...editingAgent,
-                              knowledgeBase: {
-                                ...editingAgent.knowledgeBase,
-                                endpoint: e.target.value
-                              }
-                            })}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#CE0058] focus:border-transparent"
-                            placeholder="Ex: http://localhost:8000"
-                          />
-                        </div>
+                        {editingAgent.knowledgeBase.type === 'dify' && (
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => setEditingAgent({
+                                ...editingAgent,
+                                knowledgeBase: {
+                                  ...editingAgent.knowledgeBase,
+                                  difyConfig: {
+                                    apiKey: 'app-AbEffSO5R4mJSj7EYk15jpUE',
+                                    baseUrl: 'http://192.168.1.184/v1',
+                                    conversationId: ''
+                                  }
+                                }
+                              })}
+                              className="bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm flex items-center gap-2"
+                            >
+                              <Key className="w-4 h-4" />
+                              Preencher Dados Padrão
+                            </button>
+                          </div>
+                        )}
                         
-                        <div>
-                          <label className="block text-sm font-medium text-[#232323] mb-2">
-                            Coleção/Nome da Base
-                          </label>
-                          <input
-                            type="text"
-                            value={editingAgent.knowledgeBase.collection || ''}
-                            onChange={(e) => setEditingAgent({
-                              ...editingAgent,
-                              knowledgeBase: {
-                                ...editingAgent.knowledgeBase,
-                                collection: e.target.value
-                              }
-                            })}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#CE0058] focus:border-transparent"
-                            placeholder="Ex: matrizes_curriculares"
-                          />
-                        </div>
+                        {editingAgent.knowledgeBase.type === 'dify' ? (
+                          <>
+                            <div>
+                              <label className="block text-sm font-medium text-[#232323] mb-2">
+                                URL Base do DIFY
+                              </label>
+                              <input
+                                type="text"
+                                value={editingAgent.knowledgeBase.difyConfig?.baseUrl || ''}
+                                onChange={(e) => setEditingAgent({
+                                  ...editingAgent,
+                                  knowledgeBase: {
+                                    ...editingAgent.knowledgeBase,
+                                    difyConfig: {
+                                      apiKey: editingAgent.knowledgeBase.difyConfig?.apiKey || '',
+                                      baseUrl: e.target.value,
+                                      conversationId: editingAgent.knowledgeBase.difyConfig?.conversationId || ''
+                                    }
+                                  }
+                                })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#CE0058] focus:border-transparent"
+                                placeholder="Ex: http://192.168.1.184/v1"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-[#232323] mb-2">
+                                Chave de API DIFY
+                              </label>
+                              <input
+                                type="password"
+                                value={editingAgent.knowledgeBase.difyConfig?.apiKey || ''}
+                                onChange={(e) => setEditingAgent({
+                                  ...editingAgent,
+                                  knowledgeBase: {
+                                    ...editingAgent.knowledgeBase,
+                                    difyConfig: {
+                                      apiKey: e.target.value,
+                                      baseUrl: editingAgent.knowledgeBase.difyConfig?.baseUrl || '',
+                                      conversationId: editingAgent.knowledgeBase.difyConfig?.conversationId || ''
+                                    }
+                                  }
+                                })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#CE0058] focus:border-transparent"
+                                placeholder="Ex: app-AbEffSO5R4mJSj7EYk15jpUE"
+                              />
+                            </div>
+                            
+                            <div className="col-span-2">
+                              <label className="block text-sm font-medium text-[#232323] mb-2">
+                                ID da Conversa (Opcional)
+                              </label>
+                              <input
+                                type="text"
+                                value={editingAgent.knowledgeBase.difyConfig?.conversationId || ''}
+                                onChange={(e) => setEditingAgent({
+                                  ...editingAgent,
+                                  knowledgeBase: {
+                                    ...editingAgent.knowledgeBase,
+                                    difyConfig: {
+                                      apiKey: editingAgent.knowledgeBase.difyConfig?.apiKey || '',
+                                      baseUrl: editingAgent.knowledgeBase.difyConfig?.baseUrl || '',
+                                      conversationId: e.target.value
+                                    }
+                                  }
+                                })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#CE0058] focus:border-transparent"
+                                placeholder="Deixe vazio para nova conversa"
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div>
+                              <label className="block text-sm font-medium text-[#232323] mb-2">
+                                Endpoint da API
+                              </label>
+                              <input
+                                type="text"
+                                value={editingAgent.knowledgeBase.endpoint || ''}
+                                onChange={(e) => setEditingAgent({
+                                  ...editingAgent,
+                                  knowledgeBase: {
+                                    ...editingAgent.knowledgeBase,
+                                    endpoint: e.target.value
+                                  }
+                                })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#CE0058] focus:border-transparent"
+                                placeholder="Ex: http://localhost:8000"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-[#232323] mb-2">
+                                Coleção/Nome da Base
+                              </label>
+                              <input
+                                type="text"
+                                value={editingAgent.knowledgeBase.collection || ''}
+                                onChange={(e) => setEditingAgent({
+                                  ...editingAgent,
+                                  knowledgeBase: {
+                                    ...editingAgent.knowledgeBase,
+                                    collection: e.target.value
+                                  }
+                                })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#CE0058] focus:border-transparent"
+                                placeholder="Ex: matrizes_curriculares"
+                              />
+                            </div>
+                          </>
+                        )}
+                        
+                        {editingAgent.knowledgeBase.enabled && editingAgent.knowledgeBase.type === 'dify' && (
+                          <div className="col-span-2 mt-4 space-y-3">
+                            <button
+                              type="button"
+                              onClick={() => testDifyConnection(editingAgent.knowledgeBase.difyConfig)}
+                              disabled={testingDify}
+                              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                            >
+                              {testingDify ? (
+                                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              ) : (
+                                <TestTube className="w-4 h-4" />
+                              )}
+                              {testingDify ? 'Testando...' : 'Testar Conexão DIFY'}
+                            </button>
+                            
+                            {difyTestResult && (
+                              <div className={`p-3 rounded-lg ${difyTestResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                                <div className="flex items-center gap-2">
+                                  {difyTestResult.success ? (
+                                    <Check className="w-4 h-4 text-green-600" />
+                                  ) : (
+                                    <AlertTriangle className="w-4 h-4 text-red-600" />
+                                  )}
+                                  <span className={`text-sm ${difyTestResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                                    {difyTestResult.message}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

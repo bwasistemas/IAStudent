@@ -144,6 +144,44 @@ Seja sempre informativo, baseado em evidências e orientado a procedimentos.""",
                             'frequencyPenalty': 0.1,
                             'presencePenalty': 0.2
                         })
+                    },
+                    {
+                        'name': 'Consultor DIFY',
+                        'description': 'Agente especializado em consulta à base de conhecimento DIFY',
+                        'icon': '🤖',
+                        'color': '#16A34A',
+                        'model': 'gpt-4o-mini',
+                        'isActive': True,
+                        'instructions': """Você é um consultor especializado em normas acadêmicas e procedimentos institucionais.
+
+Você tem acesso à base de conhecimento DIFY que contém informações atualizadas sobre:
+- Regulamentos acadêmicos da AFYA
+- Normas de aproveitamento de disciplinas
+- Procedimentos de transferência
+- Diretrizes curriculares
+- Políticas institucionais
+
+Use sempre a ferramenta 'consultar_base_conhecimento' para buscar informações específicas na base de conhecimento DIFY antes de responder.
+
+Seja sempre preciso, baseado nas informações oficiais e cite as fontes quando relevante.""",
+                        'knowledgeBase': json.dumps({
+                            'enabled': True,
+                            'type': 'dify',
+                            'endpoint': '',
+                            'collection': '',
+                            'difyConfig': {
+                                'apiKey': 'app-AbEffSO5R4mJSj7EYk15jpUE',
+                                'baseUrl': 'http://192.168.1.184/v1',
+                                'conversationId': ''
+                            }
+                        }),
+                        'parameters': json.dumps({
+                            'temperature': 0.7,
+                            'maxTokens': 2000,
+                            'topP': 0.9,
+                            'frequencyPenalty': 0.1,
+                            'presencePenalty': 0.1
+                        })
                     }
                 ]
                 

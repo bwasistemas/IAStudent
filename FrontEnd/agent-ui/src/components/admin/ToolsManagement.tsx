@@ -76,97 +76,53 @@ const AUTH_TYPE_OPTIONS = [
 ]
 
 export function ToolsManagement() {
-  const [tools, setTools] = useState<APITool[]>([
-    {
-      id: '1',
-      name: 'API de Dispensas Acadêmicas',
-      description: 'Consulta histórico de dispensas e equivalências já aprovadas',
-      type: 'api',
-      endpoint: 'https://api.afya.com/v1/dispensas',
-      method: 'GET',
-      authentication: {
-        type: 'bearer',
-        token: ''
-      },
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      parameters: [
-        {
-          name: 'curso_origem',
-          type: 'string',
-          required: false,
-          description: 'Filtrar por curso de origem'
-        },
-        {
-          name: 'disciplina',
-          type: 'string',
-          required: false,
-          description: 'Nome da disciplina para buscar equivalências'
-        }
-      ],
-      responseMapping: {
-        dataPath: 'data.dispensas',
-        fields: [
-          { source: 'disciplina_origem', target: 'disciplina_origem', type: 'string' },
-          { source: 'disciplina_destino', target: 'disciplina_destino', type: 'string' },
-          { source: 'percentual_equivalencia', target: 'equivalencia', type: 'number' },
-          { source: 'observacoes', target: 'observacoes', type: 'string' }
-        ]
-      },
-      isActive: false,
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z'
-    },
-    {
-      id: '2',
-      name: 'Base de Matriz Curricular',
-      description: 'Consulta matrizes curriculares atualizadas dos cursos AFYA',
-      type: 'database',
-      endpoint: 'https://db.afya.com/api/matriz-curricular',
-      method: 'POST',
-      authentication: {
-        type: 'api_key',
-        apiKey: '',
-        headerName: 'X-API-Key'
-      },
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      parameters: [
-        {
-          name: 'curso_id',
-          type: 'string',
-          required: true,
-          description: 'ID do curso para consultar matriz'
-        },
-        {
-          name: 'ano_letivo',
-          type: 'string',
-          required: false,
-          description: 'Ano letivo da matriz (padrão: atual)'
-        }
-      ],
-      responseMapping: {
-        dataPath: 'matriz.disciplinas',
-        fields: [
-          { source: 'codigo', target: 'codigo_disciplina', type: 'string' },
-          { source: 'nome', target: 'nome_disciplina', type: 'string' },
-          { source: 'carga_horaria', target: 'carga_horaria', type: 'number' },
-          { source: 'creditos', target: 'creditos', type: 'number' },
-          { source: 'periodo', target: 'periodo', type: 'number' }
-        ]
-      },
-      isActive: false,
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z'
-    }
-  ])
-  
+  const [tools, setTools] = useState<APITool[]>([])
+  const [loading, setLoading] = useState(true)
   const [editingTool, setEditingTool] = useState<APITool | null>(null)
   const [isCreatingTool, setIsCreatingTool] = useState(false)
   const [testingTool, setTestingTool] = useState<string | null>(null)
   const [showPasswords, setShowPasswords] = useState<{ [key: string]: boolean }>({})
+
+  // Carregar ferramentas da API
+  const loadTools = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('http://localhost:7777/api/tools')
+      const data = await response.json()
+      
+      if (data.tools) {
+        // Converter formato do backend para o frontend
+        const formattedTools = data.tools.map((tool: any) => ({
+          id: tool.id,
+          name: tool.name,
+          description: tool.description,
+          type: tool.type,
+          endpoint: tool.endpoint,
+          method: tool.method,
+          authentication: tool.authentication,
+          headers: tool.headers,
+          parameters: tool.parameters,
+          responseMapping: tool.response_mapping,
+          isActive: tool.is_active,
+          lastTested: tool.last_tested,
+          testStatus: tool.test_status,
+          testMessage: tool.test_message,
+          createdAt: tool.created_at,
+          updatedAt: tool.updated_at
+        }))
+        setTools(formattedTools)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar ferramentas:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Carregar ferramentas ao montar o componente
+  React.useEffect(() => {
+    loadTools()
+  }, [])
 
   // Funções para gerenciamento de tools
   const handleCreateTool = () => {
@@ -231,33 +187,19 @@ export function ToolsManagement() {
     setTestingTool(tool.id)
     
     try {
-      // Simular teste de conexão
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      const response = await fetch(`http://localhost:7777/api/tools/${tool.id}/test`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
       
-      // Atualizar status do teste
-      const updatedTools = tools.map(t => 
-        t.id === tool.id 
-          ? { 
-              ...t, 
-              testStatus: 'success' as const,
-              testMessage: 'Conexão bem-sucedida! API respondeu corretamente.',
-              lastTested: new Date().toISOString()
-            }
-          : t
-      )
-      setTools(updatedTools)
+      const result = await response.json()
+      
+      // Recarregar ferramentas para obter status atualizado
+      await loadTools()
     } catch (error) {
-      const updatedTools = tools.map(t => 
-        t.id === tool.id 
-          ? { 
-              ...t, 
-              testStatus: 'error' as const,
-              testMessage: 'Falha na conexão. Verifique URL e autenticação.',
-              lastTested: new Date().toISOString()
-            }
-          : t
-      )
-      setTools(updatedTools)
+      console.error('Erro ao testar ferramenta:', error)
     } finally {
       setTestingTool(null)
     }
@@ -357,8 +299,17 @@ export function ToolsManagement() {
         </button>
       </div>
 
+      {/* Loading */}
+      {loading && (
+        <div className="flex justify-center items-center py-8">
+          <RefreshCw className="w-6 h-6 animate-spin text-[#CE0058]" />
+          <span className="ml-2 text-[#8E9794]">Carregando ferramentas...</span>
+        </div>
+      )}
+
       {/* Lista de Tools */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {!loading && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {tools.map((tool) => (
           <div key={tool.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
             <div className="flex items-start justify-between mb-4">
@@ -457,7 +408,8 @@ export function ToolsManagement() {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Modal de Edição */}
       {editingTool && (

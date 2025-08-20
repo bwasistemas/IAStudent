@@ -51,14 +51,18 @@ Uma plataforma moderna e inteligente para gerenciamento de aproveitamento de est
 - **Streaming de respostas** em tempo real
 - **API endpoints corrigidos** para funcionamento pleno
 
-### 🔧 Sistema de Ferramentas e APIs
-- **Gerenciamento de tools** para conectar APIs externas
+### 🔧 Sistema de Ferramentas e APIs (NOVO!)
+- **Gerenciamento dinâmico de ferramentas** para conectar APIs externas
+- **Base de dados de ferramentas** com SQLite para persistência
 - **Configuração de endpoints** para dados de dispensas e equivalências
 - **Múltiplos tipos de autenticação** (Bearer, API Key, Basic Auth)
-- **Teste de conexão** com APIs configuradas
-- **Mapeamento de parâmetros** para integração
-- **Interface dedicada** para gestão de tools
-- **Integração com sistema de agentes** para acesso às ferramentas
+- **Teste de conexão em tempo real** com APIs configuradas
+- **Mapeamento inteligente de parâmetros** para integração
+- **Interface administrativa completa** para gestão de tools
+- **Integração automática** com sistema de agentes IA
+- **Ferramentas pré-configuradas** para AFYA (Dispensas, Matriz Curricular, TOTVS)
+- **Execução real de APIs** (não mockado) com tratamento de erros
+- **Sistema de logs** para monitoramento de ferramentas
 
 ### 🗂️ Sistema de Filtros e Busca
 - **Filtros por status** (Aprovado, Rejeitado, Pendente)
@@ -284,8 +288,11 @@ O projeto estará disponível em:
 - **Dataset Query**: Consulta ao dataset completo de análises
 - **Web Search**: Busca de informações atualizadas na internet
 - **Document Analysis**: Análise automática de documentos acadêmicos
-- **APIs Externas**: Conexão com sistemas de dispensas e equivalências
-- **Ferramentas Configuráveis**: Sistema de tools para integração com APIs personalizadas
+- **API de Dispensas AFYA**: Consulta histórico de dispensas e equivalências aprovadas
+- **Base de Matriz Curricular**: Consulta matrizes curriculares atualizadas dos cursos
+- **Integração TOTVS**: Webhook para sincronização com sistema TOTVS Educacional
+- **DIFY Knowledge Base**: Consulta especializada de normas e regulamentos acadêmicos
+- **Ferramentas Dinâmicas**: Sistema configurável para APIs personalizadas
 
 ## 📱 Responsividade
 
@@ -421,6 +428,16 @@ Para dúvidas ou suporte técnico:
 
 ## 🆕 Atualizações Recentes
 
+### v2.1 - Sistema Integrado de Ferramentas (NOVO!)
+- ✅ **Sistema de ferramentas dinâmicas** com base de dados SQLite
+- ✅ **Integração real de APIs** (não mockado) com agentes IA
+- ✅ **Ferramentas pré-configuradas** para AFYA (Dispensas, Matriz, TOTVS)
+- ✅ **Teste de conectividade** em tempo real para APIs configuradas
+- ✅ **Mapeamento inteligente** de respostas de APIs externas
+- ✅ **Interface administrativa** para gestão completa de ferramentas
+- ✅ **Múltiplos tipos de autenticação** (Bearer, API Key, Basic Auth)
+- ✅ **Sistema de logs** para monitoramento e debugging
+
 ### v2.0 - Sistema Completo de Administração
 - ✅ **Carregamento dinâmico de agentes** do banco de dados
 - ✅ **Sistema de configurações completo** com tabs organizadas (Agentes, Tools, Usuários, Sistema)
@@ -434,8 +451,10 @@ Para dúvidas ou suporte técnico:
 ### Funcionalidades em Desenvolvimento
 - 🔄 **Gerenciamento de usuários** completo
 - 🔄 **Sistema de notificações** por email
-- 🔄 **Integração TOTVS** para sincronização automática
 - 🔄 **Dashboard analítico** com métricas de performance dos agentes
+- 🔄 **Editor visual** para criação de fluxos de ferramentas
+- 🔄 **Cache inteligente** para otimização de consultas de APIs
+- 🔄 **Monitoramento de uptime** das ferramentas configuradas
 
 ---
 

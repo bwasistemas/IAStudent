@@ -11,22 +11,38 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 import json
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+    print("⚠️ Aviso: módulo 'requests' não disponível. Funcionalidade DIFY será limitada.")
 
-# Importar o banco de dados
+# Importar o banco de dados e gerenciador de ferramentas
 from database import agents_db
+from tools_manager import ToolsManager
 
 # Load environment variables
 load_dotenv()
 
 agent_storage: str = "tmp/agents.db"
 
+# Inicializar gerenciador de ferramentas
+tools_manager = ToolsManager("tmp/tools.db")
+
 # Modelos Pydantic para a API
+class DifyConfigModel(BaseModel):
+    apiKey: str
+    baseUrl: str
+    conversationId: Optional[str] = None
+
 class KnowledgeBaseModel(BaseModel):
     enabled: bool
     type: str
     endpoint: Optional[str] = None
     collection: Optional[str] = None
     documents: Optional[List[str]] = None
+    difyConfig: Optional[DifyConfigModel] = None
 
 class ParametersModel(BaseModel):
     temperature: float
@@ -150,9 +166,99 @@ async def reset_agents():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao resetar agentes: {str(e)}")
 
+# Endpoints para gerenciamento de ferramentas
+@api_app.get("/tools")
+async def get_tools():
+    """Retorna todas as ferramentas configuradas"""
+    try:
+        tools = tools_manager.get_all_tools()
+        return {"tools": tools}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar ferramentas: {str(e)}")
+
+@api_app.post("/tools/{tool_id}/test")
+async def test_tool(tool_id: str):
+    """Testa uma ferramenta específica"""
+    try:
+        result = tools_manager.test_tool(tool_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao testar ferramenta: {str(e)}")
+
 def web_search(query: str) -> str:
     """Simula uma busca na web"""
     return f"Resultados simulados para: {query}"
+
+def consultar_dify_knowledge_base(
+    query: str,
+    api_key: str = "app-AbEffSO5R4mJSj7EYk15jpUE",
+    base_url: str = "http://192.168.1.184/v1",
+    conversation_id: str = ""
+) -> str:
+    """
+    Consulta a base de conhecimento do DIFY.
+    
+    Args:
+        query: Pergunta ou consulta para a base de conhecimento
+        api_key: Chave de API do DIFY
+        base_url: URL base da API DIFY
+        conversation_id: ID da conversa (opcional)
+    
+    Returns:
+        Resposta da base de conhecimento DIFY
+    """
+    if not REQUESTS_AVAILABLE:
+        return f"❌ Módulo 'requests' não disponível. Não é possível consultar DIFY. Query: {query}"
+    
+    try:
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        payload = {
+            'inputs': {},
+            'query': query,
+            'response_mode': 'streaming',
+            'conversation_id': conversation_id,
+            'user': 'afya-agent'
+        }
+        
+        response = requests.post(
+            f"{base_url}/chat-messages",
+            headers=headers,
+            json=payload,
+            timeout=30,
+            stream=True
+        )
+        
+        if response.status_code == 200:
+            # Processar resposta streaming
+            complete_response = ""
+            
+            for line in response.iter_lines():
+                if line:
+                    line = line.decode('utf-8')
+                    if line.startswith('data: '):
+                        try:
+                            json_data = json.loads(line[6:])  # Remove 'data: ' prefix
+                            
+                            if json_data.get('event') == 'agent_message':
+                                complete_response += json_data.get('answer', '')
+                            elif json_data.get('event') == 'message_end':
+                                break
+                                
+                        except json.JSONDecodeError:
+                            continue
+            
+            return complete_response if complete_response else "Resposta DIFY recebida, mas vazia."
+        else:
+            return f"Erro na consulta DIFY: {response.status_code} - {response.text}"
+            
+    except requests.RequestException as e:
+        return f"Erro de conexão com DIFY: {str(e)}"
+    except Exception as e:
+        return f"Erro inesperado na consulta DIFY: {str(e)}"
 
 def consultar_analises_alunos(
     filtro_estudante: str = "",
@@ -535,6 +641,11 @@ tools = [
         name="consultar_analises_alunos",
         description="Consulta o dataset completo de análises dos alunos, incluindo histórico acadêmico, documentos analisados, feedback da IA e status de integração TOTVS. Útil para entender o contexto completo de um estudante ou análise específica.",
         func=consultar_analises_alunos
+    ),
+    Function(
+        name="consultar_dify_knowledge_base",
+        description="Consulta a base de conhecimento DIFY para obter informações especializadas e contextualizadas sobre normas acadêmicas, regulamentos, processos de aproveitamento de estudos e outras informações institucionais relevantes.",
+        func=consultar_dify_knowledge_base
     )
 ]
 
@@ -560,12 +671,44 @@ def create_agno_agents():
             presence_penalty=params.get('presencePenalty', 0.1)
         )
         
+        # Configurar ferramentas baseado na configuração da base de conhecimento
+        agent_tools = []
+        knowledge_base = db_agent.get('knowledgeBase', {})
+        
+        if knowledge_base.get('enabled') and knowledge_base.get('type') == 'dify':
+            # Se DIFY está habilitado, criar uma função personalizada com as configurações do agente
+            dify_config = knowledge_base.get('difyConfig', {})
+            api_key = dify_config.get('apiKey', 'app-AbEffSO5R4mJSj7EYk15jpUE')
+            base_url = dify_config.get('baseUrl', 'http://192.168.1.184/v1')
+            conversation_id = dify_config.get('conversationId', '')
+            
+            # Criar função wrapper para este agente específico
+            def create_dify_wrapper(api_key, base_url, conversation_id):
+                def dify_wrapper(query: str) -> str:
+                    return consultar_dify_knowledge_base(query, api_key, base_url, conversation_id)
+                return dify_wrapper
+            
+            agent_tools.append(Function(
+                name="consultar_base_conhecimento",
+                description=f"Consulta a base de conhecimento DIFY configurada para este agente. Use esta ferramenta para obter informações especializadas sobre normas acadêmicas, regulamentos e processos institucionais.",
+                func=create_dify_wrapper(api_key, base_url, conversation_id)
+            ))
+        
+        # Incluir ferramentas dinâmicas do ToolsManager
+        dynamic_tools = tools_manager.get_tools_for_agent()
+        agent_tools.extend(dynamic_tools)
+        
+        # Sempre incluir as ferramentas básicas
+        for tool in tools:
+            if tool.name != "consultar_dify_knowledge_base":  # Evitar duplicação
+                agent_tools.append(tool)
+        
         # Criar agente Agno
         agno_agent = Agent(
             name=db_agent['name'],
             description=db_agent['description'],
             instructions=db_agent['instructions'],
-            tools=tools,
+            tools=agent_tools,
             model=model
         )
         
@@ -574,18 +717,25 @@ def create_agno_agents():
     return agno_agents
 
 # Criar agentes dinamicamente do banco e configurar playground
-dynamic_agents = create_agno_agents()
-playground_app = Playground(agents=dynamic_agents)
-playground_router = playground_app.get_app()
+try:
+    dynamic_agents = create_agno_agents()
+    playground_app = Playground(agents=dynamic_agents)
+    playground_router = playground_app.get_app()
 
-# Configurar CORS para o playground
-playground_router.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://localhost:3002", "http://192.168.20.155:3000", "http://192.168.20.155:3001", "http://192.168.20.155:3002"],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
-    allow_headers=["*"],
-)
+    # Configurar CORS para o playground
+    playground_router.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://localhost:3002", "http://192.168.20.155:3000", "http://192.168.20.155:3001", "http://192.168.20.155:3002"],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
+        allow_headers=["*"],
+    )
+    PLAYGROUND_ENABLED = True
+    print("✅ Playground configurado com sucesso")
+except Exception as e:
+    print(f"⚠️ Erro ao configurar playground: {e}")
+    playground_router = None
+    PLAYGROUND_ENABLED = False
 
 # Montar as aplicações
 app = FastAPI(title="AFYA Platform", version="1.0.0")
@@ -599,8 +749,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Incluir as rotas do playground
-app.mount("/playground", playground_router)
+# Incluir as rotas do playground se disponível
+if PLAYGROUND_ENABLED and playground_router:
+    app.mount("/playground", playground_router)
+    print("✅ Playground montado em /playground")
+else:
+    print("⚠️ Playground não disponível")
 
 # Incluir as rotas da API REST
 app.mount("/api", api_app)

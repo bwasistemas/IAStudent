@@ -12,10 +12,15 @@ export interface Agent {
   instructions: string
   knowledgeBase: {
     enabled: boolean
-    type: 'rag' | 'vector' | 'database'
+    type: 'rag' | 'vector' | 'database' | 'dify'
     endpoint?: string
     collection?: string
     documents?: string[]
+    difyConfig?: {
+      apiKey: string
+      baseUrl: string
+      conversationId?: string
+    }
   }
   parameters: {
     temperature: number
