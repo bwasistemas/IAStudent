@@ -107,10 +107,12 @@ const useAIChatStreamHandler = () => {
 
   const handleStreamResponse = useCallback(
     async (input: string | FormData) => {
+      console.log('🚀 handleStreamResponse chamado com:', typeof input, input)
       setIsStreaming(true)
 
       const formData = input instanceof FormData ? input : new FormData()
       if (typeof input === 'string') {
+        console.log('📝 Adicionando mensagem ao FormData:', input)
         formData.append('message', input)
       }
 

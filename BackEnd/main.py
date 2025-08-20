@@ -5,12 +5,15 @@ from agno.tools import Function
 from agno.models.openai import OpenAIChat
 from agno.playground import Playground
 from agno.storage.sqlite import SqliteStorage
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 import json
+import io
+import tempfile
+import mimetypes
 try:
     import requests
     REQUESTS_AVAILABLE = True
@@ -185,9 +188,233 @@ async def test_tool(tool_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao testar ferramenta: {str(e)}")
 
+@api_app.post("/process-document")
+async def process_document(file: UploadFile = File(...)):
+    """Processa documentos enviados (PDF, DOC, DOCX, TXT) e extrai texto"""
+    try:
+        # Verificar tipo de arquivo
+        allowed_types = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'text/plain'
+        ]
+        
+        content_type = file.content_type
+        if content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Tipo de arquivo não suportado: {content_type}. Tipos permitidos: PDF, DOC, DOCX, TXT"
+            )
+        
+        # Ler conteúdo do arquivo
+        content = await file.read()
+        
+        # Processar baseado no tipo
+        extracted_text = ""
+        
+        if content_type == 'application/pdf':
+            extracted_text = await extract_pdf_text(content, file.filename)
+        elif content_type == 'text/plain':
+            extracted_text = content.decode('utf-8')
+        elif content_type in ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']:
+            extracted_text = await extract_word_text(content, file.filename)
+        
+        if not extracted_text.strip():
+            extracted_text = f"Documento {file.filename} processado, mas não foi possível extrair texto legível."
+        
+        return {
+            "success": True,
+            "filename": file.filename,
+            "content_type": content_type,
+            "text": extracted_text,
+            "size": len(content)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao processar documento: {str(e)}")
+
+async def extract_pdf_text(content: bytes, filename: str) -> str:
+    """Extrai texto de arquivo PDF"""
+    try:
+        # Tentar importar PyPDF2 ou pdfplumber
+        try:
+            import PyPDF2
+            pdf_reader = PyPDF2.PdfReader(io.BytesIO(content))
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text() + "\n"
+            return text.strip()
+        except ImportError:
+            pass
+        
+        try:
+            import pdfplumber
+            with pdfplumber.open(io.BytesIO(content)) as pdf:
+                text = ""
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + "\n"
+                return text.strip()
+        except ImportError:
+            pass
+            
+        # Se não conseguir instalar bibliotecas PDF, retornar mensagem explicativa
+        return f"**PDF:** {filename}\n**Nota:** Para análise completa de PDFs, instale as bibliotecas PyPDF2 ou pdfplumber.\n**Conteúdo:** Documento PDF carregado - por favor, descreva o conteúdo para análise."
+        
+    except Exception as e:
+        return f"**PDF:** {filename}\n**Erro:** {str(e)}\n**Nota:** Não foi possível extrair texto. Por favor, descreva o conteúdo do documento."
+
+async def extract_word_text(content: bytes, filename: str) -> str:
+    """Extrai texto de arquivo Word"""
+    try:
+        # Tentar importar python-docx
+        try:
+            import docx
+            doc = docx.Document(io.BytesIO(content))
+            text = ""
+            for paragraph in doc.paragraphs:
+                text += paragraph.text + "\n"
+            return text.strip()
+        except ImportError:
+            pass
+            
+        # Se não conseguir instalar biblioteca Word, retornar mensagem explicativa
+        return f"**Documento Word:** {filename}\n**Nota:** Para análise completa de documentos Word, instale a biblioteca python-docx.\n**Conteúdo:** Documento Word carregado - por favor, descreva o conteúdo para análise."
+        
+    except Exception as e:
+        return f"**Documento:** {filename}\n**Erro:** {str(e)}\n**Nota:** Não foi possível extrair texto. Por favor, descreva o conteúdo do documento."
+
 def web_search(query: str) -> str:
     """Simula uma busca na web"""
     return f"Resultados simulados para: {query}"
+
+def analisar_documento_academico(
+    conteudo_documento: str,
+    nome_arquivo: str = "",
+    tipo_analise: str = "geral"
+) -> str:
+    """
+    Analisa documentos acadêmicos (histórico escolar, ementas, etc.) 
+    fornecidos pelo usuário através de upload.
+    
+    Args:
+        conteudo_documento: Texto extraído do documento
+        nome_arquivo: Nome do arquivo original (opcional)
+        tipo_analise: Tipo de análise desejada (geral, historico, ementa, equivalencia)
+    
+    Returns:
+        Análise detalhada do documento acadêmico
+    """
+    if not conteudo_documento.strip():
+        return "❌ Erro: Conteúdo do documento está vazio ou não foi possível extrair texto."
+    
+    # Analisar o tipo de documento baseado no conteúdo
+    tipo_documento = "desconhecido"
+    if any(palavra in conteudo_documento.lower() for palavra in ["histórico", "historico", "transcript", "notas", "disciplina"]):
+        tipo_documento = "histórico_escolar"
+    elif any(palavra in conteudo_documento.lower() for palavra in ["ementa", "programa", "syllabus", "conteúdo programático"]):
+        tipo_documento = "ementa"
+    elif any(palavra in conteudo_documento.lower() for palavra in ["matriz", "curricular", "grade", "curriculum"]):
+        tipo_documento = "matriz_curricular"
+    elif any(palavra in conteudo_documento.lower() for palavra in ["certificado", "diploma", "conclusão"]):
+        tipo_documento = "certificado"
+    
+    resultado = f"📄 **Análise do Documento: {nome_arquivo}**\n\n"
+    resultado += f"🔍 **Tipo identificado:** {tipo_documento.replace('_', ' ').title()}\n\n"
+    
+    # Análise baseada no tipo
+    if tipo_documento == "histórico_escolar":
+        resultado += "📚 **Análise de Histórico Escolar:**\n"
+        resultado += "• Documento identificado como histórico acadêmico\n"
+        resultado += "• Buscando informações sobre disciplinas, notas e carga horária\n"
+        
+        # Tentar extrair disciplinas
+        linhas = conteudo_documento.split('\n')
+        disciplinas_encontradas = []
+        
+        for linha in linhas:
+            # Procurar padrões de disciplinas (código, nome, nota, etc.)
+            if any(palavra in linha.lower() for palavra in ["matemática", "física", "química", "português", "história", "cálculo", "álgebra"]):
+                disciplinas_encontradas.append(linha.strip())
+        
+        if disciplinas_encontradas:
+            resultado += f"\n📋 **Disciplinas identificadas ({len(disciplinas_encontradas)}):**\n"
+            for i, disciplina in enumerate(disciplinas_encontradas[:10], 1):  # Limitar a 10
+                resultado += f"{i}. {disciplina}\n"
+            
+            if len(disciplinas_encontradas) > 10:
+                resultado += f"... e mais {len(disciplinas_encontradas) - 10} disciplinas\n"
+        
+    elif tipo_documento == "ementa":
+        resultado += "📝 **Análise de Ementa:**\n"
+        resultado += "• Documento identificado como ementa/programa de disciplina\n"
+        resultado += "• Analisando conteúdo programático e objetivos\n"
+        
+        # Buscar informações específicas de ementa
+        if "objetivo" in conteudo_documento.lower():
+            resultado += "• ✅ Objetivos da disciplina identificados\n"
+        if "ementa" in conteudo_documento.lower():
+            resultado += "• ✅ Conteúdo programático identificado\n"
+        if "bibliografia" in conteudo_documento.lower():
+            resultado += "• ✅ Bibliografia identificada\n"
+        if any(palavra in conteudo_documento.lower() for palavra in ["carga", "hora", "crédito"]):
+            resultado += "• ✅ Informações de carga horária identificadas\n"
+    
+    else:
+        resultado += f"📋 **Análise Geral do Documento:**\n"
+        resultado += f"• Tipo: {tipo_documento.replace('_', ' ').title()}\n"
+        resultado += f"• Tamanho: {len(conteudo_documento)} caracteres\n"
+        resultado += f"• Linhas: {len(conteudo_documento.split())}\n"
+    
+    # Análise de compatibilidade AFYA
+    resultado += "\n🎯 **Análise de Compatibilidade AFYA:**\n"
+    
+    # Verificar menções de instituições conhecidas
+    instituicoes_conhecidas = ["federal", "estadual", "particular", "universidade", "faculdade", "instituto"]
+    instituicao_encontrada = any(inst in conteudo_documento.lower() for inst in instituicoes_conhecidas)
+    
+    if instituicao_encontrada:
+        resultado += "• ✅ Instituição de ensino identificada\n"
+    
+    # Verificar cursos comuns
+    cursos_afya = ["medicina", "enfermagem", "fisioterapia", "farmácia", "odontologia", "veterinária", "engenharia", "administração"]
+    curso_encontrado = [curso for curso in cursos_afya if curso in conteudo_documento.lower()]
+    
+    if curso_encontrado:
+        resultado += f"• ✅ Área de estudo compatível identificada: {', '.join(curso_encontrado)}\n"
+    
+    # Verificar disciplinas básicas comuns
+    disciplinas_basicas = ["matemática", "física", "química", "biologia", "português", "cálculo", "estatística"]
+    disciplinas_basicas_encontradas = [disc for disc in disciplinas_basicas if disc in conteudo_documento.lower()]
+    
+    if disciplinas_basicas_encontradas:
+        resultado += f"• ✅ Disciplinas básicas identificadas: {', '.join(disciplinas_basicas_encontradas)}\n"
+    
+    # Recomendações
+    resultado += "\n💡 **Recomendações:**\n"
+    if tipo_documento == "histórico_escolar":
+        resultado += "• Verificar se todas as disciplinas têm notas e carga horária\n"
+        resultado += "• Comparar com matriz curricular do curso de destino\n"
+        resultado += "• Avaliar equivalências disciplina por disciplina\n"
+    elif tipo_documento == "ementa":
+        resultado += "• Comparar conteúdo programático com disciplinas AFYA\n"
+        resultado += "• Verificar se os objetivos são compatíveis\n"
+        resultado += "• Analisar carga horária para equivalência\n"
+    
+    resultado += "• Recomenda-se análise humana para validação final\n"
+    resultado += "• Considerar contextualizar com outros documentos do estudante\n"
+    
+    # Adicionar uma parte do conteúdo para referência
+    if len(conteudo_documento) > 500:
+        resultado += f"\n📖 **Trecho do documento (primeiros 500 caracteres):**\n```\n{conteudo_documento[:500]}...\n```"
+    else:
+        resultado += f"\n📖 **Conteúdo completo do documento:**\n```\n{conteudo_documento}\n```"
+    
+    return resultado
 
 def consultar_dify_knowledge_base(
     query: str,
@@ -646,6 +873,11 @@ tools = [
         name="consultar_dify_knowledge_base",
         description="Consulta a base de conhecimento DIFY para obter informações especializadas e contextualizadas sobre normas acadêmicas, regulamentos, processos de aproveitamento de estudos e outras informações institucionais relevantes.",
         func=consultar_dify_knowledge_base
+    ),
+    Function(
+        name="analisar_documento_academico",
+        description="Analisa documentos acadêmicos enviados pelo usuário (histórico escolar, ementas, certificados, matriz curricular). Esta ferramenta deve ser usada quando o usuário mencionar ter anexado um documento ou quando o conteúdo de um documento estiver presente na conversa. Fornece análise detalhada do tipo de documento, disciplinas identificadas, compatibilidade com AFYA e recomendações.",
+        func=analisar_documento_academico
     )
 ]
 

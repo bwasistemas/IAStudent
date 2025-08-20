@@ -71,10 +71,10 @@ export function renderAgentIcon(
   agentName?: string, 
   size: string = 'w-8 h-8'
 ): React.ReactNode {
-  // Debug em desenvolvimento
-  if (process.env.NODE_ENV === 'development' && agentName) {
-    console.log(`🎨 Renderizando ícone para ${agentName}: "${iconValue}"`);
-  }
+  // Debug sempre ativo (forçado)
+  console.log(`🎨 Renderizando ícone para ${agentName || 'Sem nome'}: "${iconValue}"`);
+  console.log(`🎨 Tamanho solicitado: ${size}`);
+  console.log(`🎨 Existe mapeamento para "${iconValue}"?`, !!iconMap[iconValue || '']);
   
   // Se não há ícone, usar Brain como padrão
   if (!iconValue) {

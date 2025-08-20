@@ -175,3 +175,219 @@ INFO:     127.0.0.1:58705 - "GET / HTTP/1.1" 200 OK
 INFO:     127.0.0.1:58705 - "GET / HTTP/1.1" 200 OK
 INFO:     127.0.0.1:58701 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
 INFO:     127.0.0.1:58709 - "POST /playground/v1/playground/agents/cc8b9979-60be-404d-978b-f70d28bd738f/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59046 - "PUT /api/agents/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59046 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59077 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59104 - "PUT /api/agents/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59104 - "GET /api/agents HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [54229]
+INFO:     Started server process [57920]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+✅ Playground configurado com sucesso
+✅ Playground montado em /playground
+✅ Playground configurado com sucesso
+✅ Playground montado em /playground
+INFO:     127.0.0.1:59151 - "PUT /api/agents/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59151 - "GET /api/agents HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [57920]
+INFO:     Started server process [57943]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+✅ Playground configurado com sucesso
+✅ Playground montado em /playground
+✅ Playground configurado com sucesso
+✅ Playground montado em /playground
+INFO:     127.0.0.1:59155 - "PUT /api/agents/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59155 - "GET /api/agents HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [57943]
+INFO:     Started server process [58002]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [58002]
+INFO:     Started server process [58380]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [58380]
+INFO:     Started server process [58456]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+✅ Playground configurado com sucesso
+✅ Playground montado em /playground
+✅ Playground configurado com sucesso
+✅ Playground montado em /playground
+INFO:     127.0.0.1:59597 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59603 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59606 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59603 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59606 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59603 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59616 - "POST /playground/v1/playground/agents/fc54b446-2711-4813-b579-768d22ea3de6/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59625 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59625 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59625 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59625 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59627 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59670 - "POST /playground/v1/playground/agents/841c8e27-5120-43cb-9fd6-748487df9022/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59727 - "GET /api/process-document HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:59795 - "POST /api/process-document HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:59941 - "OPTIONS /api/agents/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59941 - "PUT /api/agents/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59941 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59970 - "PUT /api/agents/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59970 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60010 - "POST /api/process-document HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60219 - "GET /api/tools HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60219 - "GET /api/tools HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60219 - "GET /api/tools HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60219 - "GET /api/tools HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60378 - "OPTIONS /api/agents/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60378 - "PUT /api/agents/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60378 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60483 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60483 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60486 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60486 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60483 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60498 - "POST /playground/v1/playground/agents/07aa5af9-6eb3-41ba-85dc-4eed2d37929d/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61244 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61244 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61247 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61247 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61244 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61321 - "POST /playground/v1/playground/agents/07aa5af9-6eb3-41ba-85dc-4eed2d37929d/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62354 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62354 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62357 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62357 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62354 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62455 - "POST /playground/v1/playground/agents/07aa5af9-6eb3-41ba-85dc-4eed2d37929d/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62803 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62801 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62803 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62801 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62813 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62813 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62813 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62815 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62955 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62955 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62958 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62960 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62958 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62992 - "POST /playground/v1/playground/agents/841c8e27-5120-43cb-9fd6-748487df9022/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63480 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63480 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63483 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63480 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63483 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63539 - "POST /playground/v1/playground/agents/841c8e27-5120-43cb-9fd6-748487df9022/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63584 - "POST /playground/v1/playground/agents/841c8e27-5120-43cb-9fd6-748487df9022/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63621 - "POST /playground/v1/playground/agents/841c8e27-5120-43cb-9fd6-748487df9022/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63699 - "POST /playground/v1/playground/agents/841c8e27-5120-43cb-9fd6-748487df9022/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64049 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64049 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64051 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64051 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64049 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64121 - "POST /playground/v1/playground/agents/841c8e27-5120-43cb-9fd6-748487df9022/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64493 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64493 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64496 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64496 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64498 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64775 - "POST /playground/v1/playground/agents/841c8e27-5120-43cb-9fd6-748487df9022/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65150 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65150 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65153 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65153 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65150 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65202 - "POST /playground/v1/playground/agents/841c8e27-5120-43cb-9fd6-748487df9022/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49241 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49241 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49244 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49244 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49241 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49291 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49291 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49294 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49294 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49291 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49353 - "POST /playground/v1/playground/agents/841c8e27-5120-43cb-9fd6-748487df9022/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49913 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49918 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49916 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49918 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49913 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50025 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50025 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50028 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50028 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50025 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50295 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50295 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50298 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50298 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50295 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50367 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50367 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50367 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50642 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50642 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50645 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50642 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50701 - "POST /playground/v1/playground/agents/841c8e27-5120-43cb-9fd6-748487df9022/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50876 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50876 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50879 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50879 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50876 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50916 - "POST /playground/v1/playground/agents/841c8e27-5120-43cb-9fd6-748487df9022/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51157 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51179 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51223 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51229 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51223 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51229 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51223 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51278 - "POST /playground/v1/playground/agents/fc54b446-2711-4813-b579-768d22ea3de6/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51566 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51802 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51874 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51874 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51885 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51885 - "GET /api/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51885 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51885 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51889 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51889 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51891 - "GET /playground/v1/playground/agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51894 - "POST /playground/v1/playground/agents/fc54b446-2711-4813-b579-768d22ea3de6/runs HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [58456]
+INFO:     Stopping reloader process [51849]
